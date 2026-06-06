@@ -3,9 +3,9 @@ package app
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )
 
@@ -31,12 +31,20 @@ func (app *App) Run() {
 		}
 	}(logger)
 
+	// validate the config
+	validate := validator.New()
+	validationErr := validate.Struct(app.ServerConfig)
+	if validationErr != nil {
+		logger.Error("Failed while validating the server config",
+			zap.String("error", validationErr.Error()))
+	}
+
 	// create the server instance
 	server := &http.Server{
 		Addr:         app.ServerConfig.Addr,
-		ReadTimeout:  app.ServerConfig.ReadTimeout * time.Second,
-		WriteTimeout: app.ServerConfig.WriteTimeout * time.Second,
-		IdleTimeout:  app.ServerConfig.IdleTimeout * time.Second,
+		ReadTimeout:  app.ServerConfig.ReadTimeout,
+		WriteTimeout: app.ServerConfig.WriteTimeout,
+		IdleTimeout:  app.ServerConfig.IdleTimeout,
 		Handler:      nil,
 	}
 

@@ -1,6 +1,8 @@
 package config
 
-import "time"
+import (
+	"time"
+)
 
 type AppEnvType string
 
@@ -10,9 +12,9 @@ const (
 )
 
 type ServerConfig struct {
-	Addr         string
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	IdleTimeout  time.Duration
-	AppEnv       AppEnvType
+	Addr         string        `validate:"required"`
+	ReadTimeout  time.Duration `validate:"required"`
+	WriteTimeout time.Duration `validate:"required"`
+	IdleTimeout  time.Duration `validate:"required"`
+	AppEnv       AppEnvType    `validate:"required"`
 }
