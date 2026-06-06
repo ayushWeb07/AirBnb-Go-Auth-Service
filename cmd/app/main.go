@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
@@ -19,17 +18,7 @@ type App struct {
 
 func (app *App) Run() {
 	// setup logger
-	logger := zap.Must(zap.NewProduction())
-	if app.ServerConfig.AppEnv == config.Development {
-		logger = zap.Must(zap.NewDevelopment())
-	}
-
-	defer func(logger *zap.Logger) {
-		err := logger.Sync()
-		if err != nil {
-			fmt.Println("Something went wrong while syncing the zap logger")
-		}
-	}(logger)
+	logger := config.GetLogger(app.ServerConfig.AppEnv)
 
 	// validate the config
 	validate := validator.New()
