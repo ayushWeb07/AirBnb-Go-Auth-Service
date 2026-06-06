@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/repositories"
 )
 import "github.com/ayushWeb07/AirBnb-Go-Api-Gateway/cmd/app"
 
@@ -16,7 +17,7 @@ func main() {
 	}
 
 	// create the storage instance
-	storage := config.CreateNewStorage()
+	storage := repositories.NewStorage()
 
 	// create the server instance
 	serverApp := &app.App{
