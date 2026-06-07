@@ -9,11 +9,17 @@ import (
 
 type UserControllerInterface interface {
 	CreateUser(resWriter http.ResponseWriter, req *http.Request)
+	GetUserById(resWriter http.ResponseWriter, req *http.Request)
 }
 
 type UserController struct {
 	UserService services.UserServiceInterface
 	logger      *zap.Logger
+}
+
+func (uc *UserController) GetUserById(resWriter http.ResponseWriter, req *http.Request) {
+	resWriter.Write([]byte("Get by id user endpoint working fine!"))
+	uc.UserService.GetUserById()
 }
 
 func (uc *UserController) CreateUser(resWriter http.ResponseWriter, req *http.Request) {

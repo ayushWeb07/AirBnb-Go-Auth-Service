@@ -14,6 +14,7 @@ type UserRouter struct {
 func (ur *UserRouter) Register(r *chi.Mux) {
 	r.Route("/users", func(r chi.Router) {
 		r.Get("/create", ur.UserController.CreateUser)
+		r.Get("/id", ur.UserController.GetUserById)
 	})
 }
 

@@ -9,11 +9,40 @@ import (
 
 type UserRepositoryInterface interface {
 	CreateUser()
+	GetUserById()
 }
 
 type UserRepository struct {
 	db     *sql.DB
 	logger *zap.Logger
+}
+
+func (ur *UserRepository) GetUserById() {
+	// create the dummy instance
+	userModel := &models.UserModel{}
+
+	// fetch from the db
+	query := "SELECT id, username, email FROM users WHERE id = ?"
+
+	if err := ur.db.QueryRow(query, 1).Scan(&userModel.ID, &userModel.Username, &userModel.Email); err != nil {
+		if err == sql.ErrNoRows {
+			ur.logger.Error("Failed to fetch the user from the database",
+				zap.String("error", err.Error()))
+
+			return
+		}
+
+		ur.logger.Error("Failed to insert user into the database",
+			zap.String("error", err.Error()))
+
+		return
+	}
+
+	ur.logger.Info("Successfully fetched the user from the database",
+		zap.String("user_id", userModel.ID),
+		zap.String("user_username", userModel.Username),
+		zap.String("user_email", userModel.Email),
+	)
 }
 
 func (ur *UserRepository) CreateUser() {
@@ -35,7 +64,7 @@ func (ur *UserRepository) CreateUser() {
 	}
 
 	id, err := result.LastInsertId()
-	
+
 	if err != nil {
 		ur.logger.Error("Failed to insert user into the database",
 			zap.String("error", err.Error()))

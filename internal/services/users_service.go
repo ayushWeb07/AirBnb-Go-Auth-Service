@@ -7,11 +7,17 @@ import (
 
 type UserServiceInterface interface {
 	CreateUser()
+	GetUserById()
 }
 
 type UserService struct {
 	UserRepository repositories.UserRepositoryInterface
 	logger         *zap.Logger
+}
+
+func (us *UserService) GetUserById() {
+	us.logger.Info("Get by id user service called...")
+	us.UserRepository.GetUserById()
 }
 
 func (us *UserService) CreateUser() {
