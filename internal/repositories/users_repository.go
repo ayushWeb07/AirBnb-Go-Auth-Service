@@ -10,11 +10,51 @@ import (
 type UserRepositoryInterface interface {
 	CreateUser()
 	GetUserById()
+	GetAllUsers()
 }
 
 type UserRepository struct {
 	db     *sql.DB
 	logger *zap.Logger
+}
+
+func (ur *UserRepository) GetAllUsers() {
+	// create the dummy instance
+	var userModels []*models.UserModel
+
+	// load the rows
+	query := "SELECT id, username, email FROM users"
+	rows, err := ur.db.Query(query)
+
+	if err != nil {
+		ur.logger.Error("Something went wrong while fetching all the users",
+			zap.String("error", err.Error()))
+	}
+	defer rows.Close()
+
+	// loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		userModel := &models.UserModel{}
+
+		if err := rows.Scan(&userModel.ID, &userModel.Username, &userModel.Email); err != nil {
+			ur.logger.Error("Failed to fetch all the users from the database",
+				zap.String("error", err.Error()))
+
+			return
+		}
+
+		userModels = append(userModels, userModel)
+	}
+
+	if err := rows.Err(); err != nil {
+		ur.logger.Error("Failed to fetch all the users from the database",
+			zap.String("error", err.Error()))
+
+		return
+	}
+
+	ur.logger.Info("Successfully fetched all the users from the database",
+		zap.Int("count", len(userModels)))
 }
 
 func (ur *UserRepository) GetUserById() {

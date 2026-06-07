@@ -8,11 +8,17 @@ import (
 type UserServiceInterface interface {
 	CreateUser()
 	GetUserById()
+	GetAllUsers()
 }
 
 type UserService struct {
 	UserRepository repositories.UserRepositoryInterface
 	logger         *zap.Logger
+}
+
+func (us *UserService) GetAllUsers() {
+	us.logger.Info("Get all users service called...")
+	us.UserRepository.GetAllUsers()
 }
 
 func (us *UserService) GetUserById() {
