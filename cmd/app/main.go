@@ -16,6 +16,7 @@ type AppInterface interface {
 
 type App struct {
 	ServerConfig *config.ServerConfig
+	DbConfig     *config.DbConfig
 	Storage      *repositories.Storage
 }
 
@@ -23,11 +24,17 @@ func (app *App) Run() {
 	// setup logger
 	logger := config.GetLogger(app.ServerConfig.AppEnv)
 
-	// validate the config
+	// validate the server config
 	validate := validator.New()
-	validationErr := validate.Struct(app.ServerConfig)
-	if validationErr != nil {
+
+	if validationErr := validate.Struct(app.ServerConfig); validationErr != nil {
 		logger.Error("Failed while validating the server config",
+			zap.String("error", validationErr.Error()))
+	}
+
+	// validate the db config
+	if validationErr := validate.Struct(app.DbConfig); validationErr != nil {
+		logger.Error("Failed while validating the db config",
 			zap.String("error", validationErr.Error()))
 	}
 
