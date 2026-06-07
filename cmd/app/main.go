@@ -1,6 +1,7 @@
 package app
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
@@ -16,6 +17,7 @@ type AppInterface interface {
 
 type App struct {
 	ServerConfig *config.ServerConfig
+	DbConfig     *config.DbConfig
 	Storage      *repositories.Storage
 }
 
@@ -23,13 +25,28 @@ func (app *App) Run() {
 	// setup logger
 	logger := config.GetLogger(app.ServerConfig.AppEnv)
 
-	// validate the config
+	// validate the server config
 	validate := validator.New()
-	validationErr := validate.Struct(app.ServerConfig)
-	if validationErr != nil {
-		logger.Error("Failed while validating the server config",
+
+	if validationErr := validate.Struct(app.ServerConfig); validationErr != nil {
+		logger.Fatal("Failed while validating the server config",
 			zap.String("error", validationErr.Error()))
 	}
+
+	// validate the db config
+	if validationErr := validate.Struct(app.DbConfig); validationErr != nil {
+		logger.Fatal("Failed while validating the db config",
+			zap.String("error", validationErr.Error()))
+	}
+
+	// setup the db
+	db, err := config.SetupDB(app.DbConfig, logger)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
 
 	// create the server instance
 	server := &http.Server{
@@ -37,16 +54,17 @@ func (app *App) Run() {
 		ReadTimeout:  app.ServerConfig.ReadTimeout,
 		WriteTimeout: app.ServerConfig.WriteTimeout,
 		IdleTimeout:  app.ServerConfig.IdleTimeout,
-		Handler:      routers.RegisterRouters(),
+		Handler:      routers.RegisterRouters(logger, db),
 	}
 
 	// start the server
 	logger.Info("Starting the server...",
 		zap.String("port", app.ServerConfig.Addr))
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 
 	if err != nil {
-		logger.Error("Something went wrong while starting server")
+		logger.Fatal("Something went wrong while starting server",
+			zap.String("error", err.Error()))
 	}
 }
