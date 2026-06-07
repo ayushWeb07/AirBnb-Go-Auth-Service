@@ -1,8 +1,10 @@
 package services
 
 import (
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/database/models"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/repositories"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserServiceInterface interface {
@@ -29,7 +31,27 @@ func (us *UserService) GetUserById() {
 
 func (us *UserService) CreateUser() {
 	us.logger.Info("Create user service called...")
-	us.UserRepository.CreateUser()
+
+	// create a dummy user model instance
+	userModel := &models.UserModel{
+		Username: "khabib",
+		Email:    "khabib@gmail.com",
+		Password: "khabib",
+	}
+
+	// hash the password
+	bytes, err := bcrypt.GenerateFromPassword([]byte(userModel.Password), 14)
+
+	if err != nil {
+		us.logger.Fatal("Something went wrong while hashing the password",
+			zap.String("error", err.Error()))
+
+		return
+	}
+
+	userModel.Password = string(bytes)
+
+	us.UserRepository.CreateUser(userModel)
 }
 
 func (us *UserService) DeleteUserById() {

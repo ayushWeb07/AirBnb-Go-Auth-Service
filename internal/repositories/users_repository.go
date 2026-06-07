@@ -11,7 +11,7 @@ import (
 type UserRepositoryInterface interface {
 	GetAllUsers() ([]*models.UserModel, error)
 	GetUserById() (*models.UserModel, error)
-	CreateUser() error
+	CreateUser(userModel *models.UserModel) error
 	DeleteUserById() error
 }
 
@@ -93,20 +93,10 @@ func (ur *UserRepository) GetUserById() (*models.UserModel, error) {
 	return userModel, nil
 }
 
-func (ur *UserRepository) CreateUser() error {
-	// create a dummy user model instance
-	userModel := &models.UserModel{
-		Username: "ayush",
-		Email:    "ayush@gmail.com",
-		Password: "ayush",
-	}
-
-	// hash the password
-	//bcrypt.GenerateFromPassword([]byte(userModel))
-
+func (ur *UserRepository) CreateUser(userModel *models.UserModel) error {
 	// insert into the db
-	query := "INSERT INTO users (username, email) VALUES (?, ?)"
-	result, err := ur.db.Exec(query, userModel.Username, userModel.Email)
+	query := "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"
+	result, err := ur.db.Exec(query, userModel.Username, userModel.Email, userModel.Password)
 
 	if err != nil {
 		ur.logger.Error("Failed to insert user into the database",
