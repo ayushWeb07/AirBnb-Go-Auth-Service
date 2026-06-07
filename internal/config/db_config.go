@@ -10,11 +10,14 @@ import (
 )
 
 type DbConfig struct {
-	DbUsername string `validate:"required"`
-	DbPassword string `validate:"required"`
-	DbNet      string `validate:"required"`
-	DbAddress  string `validate:"required"`
-	DbName     string `validate:"required"`
+	DbUsername        string `validate:"required"`
+	DbPassword        string `validate:"required"`
+	DbNet             string `validate:"required"`
+	DbAddress         string `validate:"required"`
+	DbName            string `validate:"required"`
+	GooseDriver       string `validate:"required"`
+	GooseDbString     string `validate:"required"`
+	GooseMigrationDir string `validate:"required"`
 }
 
 func LoadDbConfig() (*DbConfig, error) {
@@ -27,11 +30,14 @@ func LoadDbConfig() (*DbConfig, error) {
 
 	// load the envs & create the config instance
 	cfg := &DbConfig{
-		DbUsername: LoadSingleEnvVar("DB_USERNAME", "admin"),
-		DbPassword: LoadSingleEnvVar("DB_PASSWORD", "admin"),
-		DbNet:      LoadSingleEnvVar("DB_NET", "tcp"),
-		DbAddress:  LoadSingleEnvVar("DB_ADDRESS", "127.0.0.1:3306"),
-		DbName:     LoadSingleEnvVar("DB_NAME", "dev_db"),
+		DbUsername:        LoadSingleEnvVar("DB_USERNAME", "admin"),
+		DbPassword:        LoadSingleEnvVar("DB_PASSWORD", "admin"),
+		DbNet:             LoadSingleEnvVar("DB_NET", "tcp"),
+		DbAddress:         LoadSingleEnvVar("DB_ADDRESS", "127.0.0.1:3306"),
+		DbName:            LoadSingleEnvVar("DB_NAME", "dev_db"),
+		GooseDriver:       LoadSingleEnvVar("GOOSE_DRIVER", "mysql"),
+		GooseDbString:     LoadSingleEnvVar("GOOSE_DBSTRING", "admin@admin@tcp(127.0.0.1:3306)/dev_db"),
+		GooseMigrationDir: LoadSingleEnvVar("GOOSE_MIGRATION_DIR", "internal/database/migrations"),
 	}
 
 	return cfg, nil
