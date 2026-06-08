@@ -1,0 +1,56 @@
+version: '3'
+
+tasks:
+  goose:status:
+    desc: Print the status of all migrations
+    cmds:
+      - goose status
+
+  goose:create:
+    desc: Create a new SQL migration
+    requires:
+      vars:
+        - MIGRATION_NAME
+    cmds:
+      - goose create {{.MIGRATION_NAME}} sql
+
+  goose:up-all:
+    desc: Apply all migrations
+    cmds:
+      - goose up
+
+  goose:up-to:
+    desc: Migrate up to a specific version
+    requires:
+      vars:
+        - VERSION
+    cmds:
+      - goose up-to {{.VERSION}}
+
+  goose:up-by-one:
+    desc: Migrate up a single migration from the current version
+    cmds:
+      - goose up-by-one
+
+  goose:down-all:
+    desc: Roll back all migrations
+    cmds:
+      - goose down-to 0
+
+  goose:down-to:
+    desc: Roll back migrations to a specific version
+    requires:
+      vars:
+        - VERSION
+    cmds:
+      - goose down-to {{.VERSION}}
+
+  goose:down-by-one:
+    desc: Roll back a single migration from the current version
+    cmds:
+      - goose down
+
+  server:run:
+    desc: Run the server
+    cmds:
+      - go run main.go

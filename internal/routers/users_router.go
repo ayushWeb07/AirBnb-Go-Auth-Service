@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/controllers"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -9,21 +10,24 @@ import (
 type UserRouter struct {
 	UserController controllers.UserControllerInterface
 	logger         *zap.Logger
+	serverConfig   *config.ServerConfig
 }
 
 func (ur *UserRouter) Register(r *chi.Mux) {
 	r.Route("/users", func(r chi.Router) {
-		r.Get("/create", ur.UserController.CreateUser)
-		r.Get("/id", ur.UserController.GetUserById)
+		r.Post("/register", ur.UserController.CreateUser)
+		r.Post("/login", ur.UserController.LoginUser)
 		r.Get("/", ur.UserController.GetAllUsers)
-		r.Get("/delete", ur.UserController.DeleteUserById)
+		r.Get("/{id}", ur.UserController.GetUserById)
+		r.Delete("/{id}", ur.UserController.DeleteUserById)
 	})
 }
 
-func NewUserRouter(controller controllers.UserControllerInterface, logger *zap.Logger) RouterInterface {
+func NewUserRouter(controller controllers.UserControllerInterface, logger *zap.Logger, serverConfig *config.ServerConfig) RouterInterface {
 	newUserRouter := &UserRouter{
 		UserController: controller,
 		logger:         logger,
+		serverConfig:   serverConfig,
 	}
 
 	return newUserRouter
