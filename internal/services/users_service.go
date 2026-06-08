@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
@@ -12,11 +13,11 @@ import (
 )
 
 type UserServiceInterface interface {
-	CreateUser()
-	GetUserById()
-	GetAllUsers()
-	DeleteUserById()
-	LoginUser()
+	CreateUser() (*models.UserModel, error)
+	GetUserById() (*models.UserModel, error)
+	GetAllUsers() ([]*models.UserModel, error)
+	DeleteUserById() error
+	LoginUser() (string, error)
 }
 
 type UserService struct {
@@ -25,24 +26,37 @@ type UserService struct {
 	serverConfig   *config.ServerConfig
 }
 
-func (us *UserService) GetAllUsers() {
+func (us *UserService) GetAllUsers() ([]*models.UserModel, error) {
 	us.logger.Info("Get all users service called...")
-	us.UserRepository.GetAllUsers()
+
+	// call the fetch all users repository
+	userModels, err := us.UserRepository.GetAllUsers()
+	return userModels, err
 }
 
-func (us *UserService) GetUserById() {
+func (us *UserService) GetUserById() (*models.UserModel, error) {
 	us.logger.Info("Get by id user service called...")
-	us.UserRepository.GetUserById()
+
+	// call the fetch user by id repository
+	userModel, err := us.UserRepository.GetUserById()
+	return userModel, err
 }
 
-func (us *UserService) CreateUser() {
+func (us *UserService) CreateUser() (*models.UserModel, error) {
 	us.logger.Info("Create user service called...")
 
 	// create a dummy user model instance
 	userModel := &models.UserModel{
-		Username: "conor",
-		Email:    "conor@gmail.com",
-		Password: "conor@2007",
+		Username: "ronaldo",
+		Email:    "ronaldo@gmail.com",
+		Password: "ronaldo@2007",
+	}
+
+	// check if the user already exists
+	_, err := us.UserRepository.GetUserByUsernameAndEmail(userModel)
+
+	if err == nil {
+		return nil, fmt.Errorf("User with such username and email, already exists")
 	}
 
 	// hash the password
@@ -52,41 +66,46 @@ func (us *UserService) CreateUser() {
 		us.logger.Fatal("Something went wrong while hashing the password",
 			zap.String("error", err.Error()))
 
-		return
+		return nil, err
 	}
 
 	userModel.Password = string(bytes)
 
-	// call the repository endpoint
-	err = us.UserRepository.CreateUser(userModel)
+	// call the create user repository
+	_, err = us.UserRepository.CreateUser(userModel)
 
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	us.logger.Info("Create user service was successful")
+
+	return userModel, nil
 }
 
-func (us *UserService) DeleteUserById() {
+func (us *UserService) DeleteUserById() error {
 	us.logger.Info("Delete user service called...")
-	us.UserRepository.DeleteUserById()
+
+	// call the delete user by id repository
+	err := us.UserRepository.DeleteUserById()
+	return err
 }
 
-func (us *UserService) LoginUser() {
+func (us *UserService) LoginUser() (string, error) {
 	us.logger.Info("Login user service called...")
 
 	// create a dummy user model instance
 	userModel := &models.UserModel{
 		Username: "conor",
 		Email:    "conor@gmail.com",
-		Password: "conor@2007",
+		Password: "aonor@2007",
 	}
 
 	// fetch the user by username and email repository
 	existingUserModel, err := us.UserRepository.GetUserByUsernameAndEmail(userModel)
 
 	if err != nil {
-		return
+		return "", err
 	}
 
 	// check if passwords match
@@ -96,7 +115,7 @@ func (us *UserService) LoginUser() {
 		us.logger.Error("Invalid password has been provided",
 			zap.String("error", err.Error()))
 
-		return
+		return "", err
 	}
 
 	// generate the jwt token
@@ -113,11 +132,13 @@ func (us *UserService) LoginUser() {
 		us.logger.Fatal("Something went wrong while generating the token",
 			zap.String("error", err.Error()))
 
-		return
+		return "", err
 	}
 
 	us.logger.Info("Login user service was successful",
 		zap.String("token", tokenString))
+
+	return tokenString, nil
 }
 
 func NewUserService(repo repositories.UserRepositoryInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserServiceInterface {

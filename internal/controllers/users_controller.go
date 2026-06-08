@@ -30,32 +30,99 @@ type UserController struct {
 }
 
 func (uc *UserController) GetAllUsers(resWriter http.ResponseWriter, req *http.Request) {
-	render.JSON(resWriter, http.StatusOK, map[string]any{
-		"message": "Get all users endpoint working fine!",
-		"status":  "Fine!",
-	})
+	// call the fetch all users service
+	userModels, err := uc.UserService.GetAllUsers()
 
-	uc.UserService.GetAllUsers()
+	if err != nil {
+		render.JSON(resWriter, http.StatusInternalServerError, map[string]any{
+			"success": false,
+			"message": "Something went wrong while getting all users",
+			"error":   err.Error(),
+		})
+	} else {
+		render.JSON(resWriter, http.StatusOK, map[string]any{
+			"success": true,
+			"message": "Successfully fetched all the users",
+			"count":   len(userModels),
+		})
+	}
 }
 
 func (uc *UserController) GetUserById(resWriter http.ResponseWriter, req *http.Request) {
-	resWriter.Write([]byte("Get by id user endpoint working fine!"))
-	uc.UserService.GetUserById()
+	// call the fetch user by id service
+	userModel, err := uc.UserService.GetUserById()
+
+	if err != nil {
+		render.JSON(resWriter, http.StatusInternalServerError, map[string]any{
+			"success": false,
+			"message": "Something went wrong while getting the user by id",
+			"error":   err.Error(),
+		})
+	} else {
+		render.JSON(resWriter, http.StatusOK, map[string]any{
+			"success":  true,
+			"message":  "Successfully fetched the user by id",
+			"email":    userModel.Email,
+			"username": userModel.Username,
+		})
+	}
 }
 
 func (uc *UserController) CreateUser(resWriter http.ResponseWriter, req *http.Request) {
-	resWriter.Write([]byte("Create user endpoint working fine!"))
-	uc.UserService.CreateUser()
+	// call the create user service
+	userModel, err := uc.UserService.CreateUser()
+
+	if err != nil {
+		render.JSON(resWriter, http.StatusInternalServerError, map[string]any{
+			"success": false,
+			"message": "Something went wrong while creating the user",
+			"error":   err.Error(),
+		})
+	} else {
+		render.JSON(resWriter, http.StatusCreated, map[string]any{
+			"success":  true,
+			"message":  "Successfully created the user",
+			"email":    userModel.Email,
+			"username": userModel.Username,
+		})
+	}
 }
 
 func (uc *UserController) DeleteUserById(resWriter http.ResponseWriter, req *http.Request) {
-	resWriter.Write([]byte("Delete user endpoint working fine!"))
-	uc.UserService.DeleteUserById()
+	// call the delete user service
+	err := uc.UserService.DeleteUserById()
+
+	if err != nil {
+		render.JSON(resWriter, http.StatusInternalServerError, map[string]any{
+			"success": false,
+			"message": "Something went wrong while deleting the user",
+			"error":   err.Error(),
+		})
+	} else {
+		render.JSON(resWriter, http.StatusOK, map[string]any{
+			"success": true,
+			"message": "Successfully deleted the user",
+		})
+	}
 }
 
 func (uc *UserController) LoginUser(resWriter http.ResponseWriter, req *http.Request) {
-	resWriter.Write([]byte("Login user endpoint working fine!"))
-	uc.UserService.LoginUser()
+	// call the login user service
+	token, err := uc.UserService.LoginUser()
+
+	if err != nil {
+		render.JSON(resWriter, http.StatusInternalServerError, map[string]any{
+			"success": false,
+			"message": "Something went wrong while logging in",
+			"error":   err.Error(),
+		})
+	} else {
+		render.JSON(resWriter, http.StatusOK, map[string]any{
+			"success": true,
+			"message": "Login was successful",
+			"token":   token,
+		})
+	}
 }
 
 func NewUserController(service services.UserServiceInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserControllerInterface {

@@ -12,7 +12,7 @@ import (
 type UserRepositoryInterface interface {
 	GetAllUsers() ([]*models.UserModel, error)
 	GetUserById() (*models.UserModel, error)
-	CreateUser(userModel *models.UserModel) error
+	CreateUser(userModel *models.UserModel) (*models.UserModel, error)
 	DeleteUserById() error
 	GetUserByUsernameAndEmail(userModel *models.UserModel) (*models.UserModel, error)
 }
@@ -96,7 +96,7 @@ func (ur *UserRepository) GetUserById() (*models.UserModel, error) {
 	return userModel, nil
 }
 
-func (ur *UserRepository) CreateUser(userModel *models.UserModel) error {
+func (ur *UserRepository) CreateUser(userModel *models.UserModel) (*models.UserModel, error) {
 	// insert into the db
 	query := "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"
 	result, err := ur.db.Exec(query, userModel.Username, userModel.Email, userModel.Password)
@@ -105,7 +105,7 @@ func (ur *UserRepository) CreateUser(userModel *models.UserModel) error {
 		ur.logger.Error("Failed to insert user into the database",
 			zap.String("error", err.Error()))
 
-		return err
+		return nil, err
 	}
 
 	id, err := result.LastInsertId()
@@ -114,13 +114,13 @@ func (ur *UserRepository) CreateUser(userModel *models.UserModel) error {
 		ur.logger.Error("Failed to insert user into the database",
 			zap.String("error", err.Error()))
 
-		return err
+		return nil, err
 	}
 
 	ur.logger.Info("Successfully inserted user into the database",
 		zap.Int64("user_id", id))
 
-	return nil
+	return userModel, nil
 }
 
 func (ur *UserRepository) DeleteUserById() error {
