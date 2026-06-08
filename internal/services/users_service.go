@@ -16,6 +16,7 @@ type UserServiceInterface interface {
 	GetUserById()
 	GetAllUsers()
 	DeleteUserById()
+	LoginUser()
 }
 
 type UserService struct {
@@ -70,7 +71,7 @@ func (us *UserService) CreateUser() {
 		"exp":        time.Now().Add(24 * time.Hour).Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(us.serverConfig.Addr))
+	tokenString, err := token.SignedString([]byte(us.serverConfig.JwtSecretKey))
 
 	if err != nil {
 		us.logger.Fatal("Something went wrong while generating the token",
@@ -86,6 +87,43 @@ func (us *UserService) CreateUser() {
 func (us *UserService) DeleteUserById() {
 	us.logger.Info("Delete user service called...")
 	us.UserRepository.DeleteUserById()
+}
+
+func (us *UserService) LoginUser() {
+	us.logger.Info("Login user service called...")
+
+	// create a dummy user model instance
+	userModel := &models.UserModel{
+		Username: "conor",
+		Email:    "conor@gmail.com",
+		Password: "conor@2007",
+	}
+
+	// call the repository endpoint
+	err := us.UserRepository.LoginUser(userModel)
+
+	if err != nil {
+		return
+	}
+
+	// generate the jwt token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_name":  userModel.Username,
+		"user_email": userModel.Email,
+		"exp":        time.Now().Add(24 * time.Hour).Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(us.serverConfig.JwtSecretKey))
+
+	if err != nil {
+		us.logger.Fatal("Something went wrong while generating the token",
+			zap.String("error", err.Error()))
+
+		return
+	}
+
+	us.logger.Info("Login user service was successful",
+		zap.String("token", tokenString))
 }
 
 func NewUserService(repo repositories.UserRepositoryInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserServiceInterface {

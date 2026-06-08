@@ -13,6 +13,7 @@ type UserControllerInterface interface {
 	GetUserById(resWriter http.ResponseWriter, req *http.Request)
 	GetAllUsers(resWriter http.ResponseWriter, req *http.Request)
 	DeleteUserById(resWriter http.ResponseWriter, req *http.Request)
+	LoginUser(resWriter http.ResponseWriter, req *http.Request)
 }
 
 type UserController struct {
@@ -39,6 +40,11 @@ func (uc *UserController) CreateUser(resWriter http.ResponseWriter, req *http.Re
 func (uc *UserController) DeleteUserById(resWriter http.ResponseWriter, req *http.Request) {
 	resWriter.Write([]byte("Delete user endpoint working fine!"))
 	uc.UserService.DeleteUserById()
+}
+
+func (uc *UserController) LoginUser(resWriter http.ResponseWriter, req *http.Request) {
+	resWriter.Write([]byte("Login user endpoint working fine!"))
+	uc.UserService.LoginUser()
 }
 
 func NewUserController(service services.UserServiceInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserControllerInterface {
