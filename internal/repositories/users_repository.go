@@ -7,7 +7,6 @@ import (
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/database/models"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepositoryInterface interface {
@@ -15,7 +14,7 @@ type UserRepositoryInterface interface {
 	GetUserById() (*models.UserModel, error)
 	CreateUser(userModel *models.UserModel) error
 	DeleteUserById() error
-	LoginUser(userModel *models.UserModel) error
+	GetUserByUsernameAndEmail(userModel *models.UserModel) (*models.UserModel, error)
 }
 
 type UserRepository struct {
@@ -159,8 +158,7 @@ func (ur *UserRepository) DeleteUserById() error {
 	return nil
 }
 
-func (ur *UserRepository) LoginUser(userModel *models.UserModel) error {
-
+func (ur *UserRepository) GetUserByUsernameAndEmail(userModel *models.UserModel) (*models.UserModel, error) {
 	existingUserModel := &models.UserModel{}
 
 	// fetch from the db
@@ -171,26 +169,16 @@ func (ur *UserRepository) LoginUser(userModel *models.UserModel) error {
 			ur.logger.Error("No such user found in the database",
 				zap.String("error", err.Error()))
 
-			return err
+			return nil, err
 		}
 
 		ur.logger.Error("Failed to fetch the user from the database",
 			zap.String("error", err.Error()))
 
-		return err
+		return nil, err
 	}
 
-	// check if passwords match
-	err := bcrypt.CompareHashAndPassword([]byte(existingUserModel.Password), []byte(userModel.Password))
-
-	if err != nil {
-		ur.logger.Error("Invalid password has been provided",
-			zap.String("error", err.Error()))
-
-		return err
-	}
-
-	return nil
+	return existingUserModel, nil
 }
 
 func NewUserRepository(logger *zap.Logger, db *sql.DB, serverConfig *config.ServerConfig) UserRepositoryInterface {

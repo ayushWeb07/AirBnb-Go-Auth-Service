@@ -99,10 +99,20 @@ func (us *UserService) LoginUser() {
 		Password: "conor@2007",
 	}
 
-	// call the repository endpoint
-	err := us.UserRepository.LoginUser(userModel)
+	// fetch the user by username and email repository
+	existingUserModel, err := us.UserRepository.GetUserByUsernameAndEmail(userModel)
 
 	if err != nil {
+		return
+	}
+
+	// check if passwords match
+	err = bcrypt.CompareHashAndPassword([]byte(existingUserModel.Password), []byte(userModel.Password))
+
+	if err != nil {
+		us.logger.Error("Invalid password has been provided",
+			zap.String("error", err.Error()))
+
 		return
 	}
 
