@@ -5,8 +5,15 @@ import (
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/services"
+	renderPkg "github.com/unrolled/render"
 	"go.uber.org/zap"
 )
+
+var render *renderPkg.Render
+
+func init() {
+	render = renderPkg.New()
+}
 
 type UserControllerInterface interface {
 	CreateUser(resWriter http.ResponseWriter, req *http.Request)
@@ -23,7 +30,11 @@ type UserController struct {
 }
 
 func (uc *UserController) GetAllUsers(resWriter http.ResponseWriter, req *http.Request) {
-	resWriter.Write([]byte("Get all users endpoint working fine!"))
+	render.JSON(resWriter, http.StatusOK, map[string]any{
+		"message": "Get all users endpoint working fine!",
+		"status":  "Fine!",
+	})
+
 	uc.UserService.GetAllUsers()
 }
 
