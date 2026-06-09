@@ -1,15 +1,12 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/dtos"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/services"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/utils"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-playground/validator/v10"
 	renderPkg "github.com/unrolled/render"
 	"go.uber.org/zap"
 )
@@ -35,10 +32,10 @@ type UserController struct {
 }
 
 func (uc *UserController) CreateUser(resWriter http.ResponseWriter, req *http.Request) {
-	userPayload := req.Context().Value("user").(*dtos.CreateUser)
+	userPayload := req.Context().Value("payload").(dtos.CreateUser)
 
 	// call the create user service
-	serviceErr := uc.UserService.CreateUser(userPayload)
+	serviceErr := uc.UserService.CreateUser(&userPayload)
 
 	if serviceErr != nil {
 		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
@@ -59,37 +56,10 @@ func (uc *UserController) CreateUser(resWriter http.ResponseWriter, req *http.Re
 }
 
 func (uc *UserController) LoginUser(resWriter http.ResponseWriter, req *http.Request) {
-	userPayload := &dtos.LoginUser{}
-
-	// read the data from the request body
-	decodeErr := json.NewDecoder(req.Body).Decode(&userPayload)
-
-	if decodeErr != nil {
-		utils.WriteJsonResponse(http.StatusBadRequest, resWriter, map[string]any{
-			"success": false,
-			"message": "Failed to decode the json body",
-			"error":   decodeErr.Error(),
-		})
-
-		return
-	}
-
-	// validate the request body
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	validateErr := validate.Struct(userPayload)
-
-	if validateErr != nil {
-		utils.WriteJsonResponse(http.StatusBadRequest, resWriter, map[string]any{
-			"success": false,
-			"message": "Invalid json body has been provided",
-			"error":   validateErr.Error(),
-		})
-
-		return
-	}
+	userPayload := req.Context().Value("payload").(dtos.LoginUser)
 
 	// call the login user service
-	token, serviceErr := uc.UserService.LoginUser(userPayload)
+	token, serviceErr := uc.UserService.LoginUser(&userPayload)
 
 	if serviceErr != nil {
 		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
@@ -130,29 +100,10 @@ func (uc *UserController) GetAllUsers(resWriter http.ResponseWriter, req *http.R
 }
 
 func (uc *UserController) GetUserById(resWriter http.ResponseWriter, req *http.Request) {
-	// fetch the url params
-	id := chi.URLParam(req, "id")
-
-	userPayload := &dtos.GetUserById{
-		ID: id,
-	}
-
-	// validate the params id
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	validateErr := validate.Struct(userPayload)
-
-	if validateErr != nil {
-		utils.WriteJsonResponse(http.StatusBadRequest, resWriter, map[string]any{
-			"success": false,
-			"message": "Invalid id has been provided",
-			"error":   validateErr.Error(),
-		})
-
-		return
-	}
+	userPayload := req.Context().Value("payload").(dtos.GetUserById)
 
 	// call the fetch user by id service
-	userModel, serviceErr := uc.UserService.GetUserById(userPayload)
+	userModel, serviceErr := uc.UserService.GetUserById(&userPayload)
 
 	if serviceErr != nil {
 		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
@@ -173,29 +124,10 @@ func (uc *UserController) GetUserById(resWriter http.ResponseWriter, req *http.R
 }
 
 func (uc *UserController) DeleteUserById(resWriter http.ResponseWriter, req *http.Request) {
-	// fetch the url params
-	id := chi.URLParam(req, "id")
-
-	userPayload := &dtos.DeleteUserById{
-		ID: id,
-	}
-
-	// validate the params id
-	validate := validator.New(validator.WithRequiredStructEnabled())
-	validateErr := validate.Struct(userPayload)
-
-	if validateErr != nil {
-		utils.WriteJsonResponse(http.StatusBadRequest, resWriter, map[string]any{
-			"success": false,
-			"message": "Invalid id has been provided",
-			"error":   validateErr.Error(),
-		})
-
-		return
-	}
+	userPayload := req.Context().Value("payload").(dtos.DeleteUserById)
 
 	// call the delete user service
-	serviceErr := uc.UserService.DeleteUserById(userPayload)
+	serviceErr := uc.UserService.DeleteUserById(&userPayload)
 
 	if serviceErr != nil {
 		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
