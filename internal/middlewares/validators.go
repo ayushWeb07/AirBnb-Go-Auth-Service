@@ -50,7 +50,7 @@ func DecodeAndValidateRequestBody[T dtos.DtoInterface](next http.Handler) http.H
 // HTTP middleware to decode and validate request params
 func DecodeAndValidateParams[T dtos.UrlParamSetterInterface](next http.Handler) http.Handler {
 	return http.HandlerFunc(func(resWriter http.ResponseWriter, req *http.Request) {
-		userPayload := new(T) // *T
+		userPayload := new(T)
 
 		// assign req url params
 		*userPayload = (*userPayload).SetUrlParams(req).(T)
