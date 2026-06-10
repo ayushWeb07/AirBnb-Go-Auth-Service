@@ -35,12 +35,12 @@ func RegisterRouters(logger *zap.Logger, db *sql.DB, serverConfig *config.Server
 
 	userRouter.Register(router)
 
-	// create the reverse proxy servers
-	hotels := utils.ProxyToService("http://localhost:3000")
-	bookings := utils.ProxyToService("http://localhost:3010")
+	// register the reverse proxy servers
+	hotelService := utils.ProxyToService("http://localhost:3000")
+	bookingService := utils.ProxyToService("http://localhost:3010")
 
-	router.Handle("/api/v1/hotels/*", hotels)
-	router.Handle("/api/v1/bookings/*", bookings)
+	router.Handle("/api/v1/hotels/*", hotelService)
+	router.Handle("/api/v1/bookings/*", bookingService)
 
 	return router
 }
