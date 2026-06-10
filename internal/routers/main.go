@@ -8,6 +8,7 @@ import (
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/middlewares"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/repositories"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/services"
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
@@ -33,6 +34,13 @@ func RegisterRouters(logger *zap.Logger, db *sql.DB, serverConfig *config.Server
 	userRouter := NewUserRouter(userController, logger, serverConfig)
 
 	userRouter.Register(router)
+
+	// create the reverse proxy servers
+	hotels := utils.ProxyToService("http://localhost:3000")
+	bookings := utils.ProxyToService("http://localhost:3010")
+
+	router.Handle("/api/v1/hotels/*", hotels)
+	router.Handle("/api/v1/bookings/*", bookings)
 
 	return router
 }
