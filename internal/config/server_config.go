@@ -27,7 +27,7 @@ func LoadServerConfig() (*ServerConfig, error) {
 
 	// load the envs & create the config instance
 	cfg := &ServerConfig{
-		Addr:              LoadSingleEnvVar("ADDR", ":8181"),
+		Addr:              LoadSingleEnvVar("ADDR", ":3020"),
 		ReadTimeout:       time.Duration(LoadSingleEnvVar("READ_TIMEOUT", 15)) * time.Second,
 		WriteTimeout:      time.Duration(LoadSingleEnvVar("WRITE_TIMEOUT", 15)) * time.Second,
 		IdleTimeout:       time.Duration(LoadSingleEnvVar("IDLE_TIMEOUT", 180)) * time.Second,
