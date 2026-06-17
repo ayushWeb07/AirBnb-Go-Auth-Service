@@ -5,14 +5,13 @@ import (
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/controllers"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/dtos"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/middlewares"
-	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
 type UserRouter struct {
 	UserController controllers.UserControllerInterface
 	logger         *zap.Logger
-	serverConfig   *config.ServerConfig
+	serverConfig   *config.ServerConfigUs
 }
 
 func (ur *UserRouter) Register(r *chi.Mux) {

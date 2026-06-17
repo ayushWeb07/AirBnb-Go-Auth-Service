@@ -9,7 +9,6 @@ import (
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/repositories"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/services"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/utils"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 )
