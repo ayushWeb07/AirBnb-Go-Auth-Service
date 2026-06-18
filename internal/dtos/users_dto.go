@@ -18,9 +18,9 @@ type LoginUserPayload struct {
 }
 
 type GetUserByIdParams struct {
-	ID int `validate:"required,number"`
+	ID int `validate:"required,gte=1"`
 }
 
 type DeleteUserByIdParams struct {
-	ID int `validate:"required,number"`
+	ID int `validate:"required,gte=1"`
 }
