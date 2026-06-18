@@ -1,7 +1,7 @@
 package models
 
 type UserModel struct {
-	ID        string `db:"id" json:"id"`
+	ID        int    `db:"id" json:"id"`
 	Username  string `db:"username" json:"username" validate:"required"`
 	Email     string `db:"email" json:"email" validate:"required"`
 	Password  string `db:"password" json:"-" validate:"required"`

@@ -98,7 +98,7 @@ func AuthMiddleware(serverConfig *config.ServerConfig) func(next http.Handler) h
 			}
 
 			// access the payload
-			userId := claims["id"].(string)
+			userId := claims["id"].(int)
 			expiryTime := claims["exp"].(float64)
 
 			// check if token has expired
@@ -113,11 +113,11 @@ func AuthMiddleware(serverConfig *config.ServerConfig) func(next http.Handler) h
 			}
 
 			// create a new context including the user details
-			userPayload := &dtos.GetUserById{
+			userParams := &dtos.GetUserByIdParams{
 				ID: userId,
 			}
 
-			ctx := context.WithValue(req.Context(), "payload", userPayload)
+			ctx := context.WithValue(req.Context(), "params", userParams)
 			next.ServeHTTP(resWriter, req.WithContext(ctx))
 		})
 	}

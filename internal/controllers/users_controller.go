@@ -33,7 +33,7 @@ type UserController struct {
 }
 
 func (uc *UserController) CreateUser(resWriter http.ResponseWriter, req *http.Request) {
-	userPayload := req.Context().Value("payload").(*dtos.CreateUser)
+	userPayload := req.Context().Value("payload").(*dtos.CreateUserPayload)
 
 	// call the create user service
 	serviceErr := uc.UserService.CreateUser(userPayload)
@@ -57,7 +57,7 @@ func (uc *UserController) CreateUser(resWriter http.ResponseWriter, req *http.Re
 }
 
 func (uc *UserController) LoginUser(resWriter http.ResponseWriter, req *http.Request) {
-	userPayload := req.Context().Value("payload").(*dtos.LoginUser)
+	userPayload := req.Context().Value("payload").(*dtos.LoginUserPayload)
 
 	// call the login user service
 	token, serviceErr := uc.UserService.LoginUser(userPayload)
@@ -101,10 +101,10 @@ func (uc *UserController) GetAllUsers(resWriter http.ResponseWriter, req *http.R
 }
 
 func (uc *UserController) GetUserById(resWriter http.ResponseWriter, req *http.Request) {
-	userPayload := req.Context().Value("payload").(*dtos.GetUserById)
+	userParams := req.Context().Value("params").(*dtos.GetUserByIdParams)
 
 	// call the fetch user by id service
-	userModel, serviceErr := uc.UserService.GetUserById(userPayload)
+	userModel, serviceErr := uc.UserService.GetUserById(userParams)
 
 	if serviceErr != nil {
 		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
@@ -124,10 +124,10 @@ func (uc *UserController) GetUserById(resWriter http.ResponseWriter, req *http.R
 }
 
 func (uc *UserController) DeleteUserById(resWriter http.ResponseWriter, req *http.Request) {
-	userPayload := req.Context().Value("payload").(*dtos.DeleteUserById)
+	userParams := req.Context().Value("params").(*dtos.DeleteUserByIdParams)
 
 	// call the delete user service
-	serviceErr := uc.UserService.DeleteUserById(userPayload)
+	serviceErr := uc.UserService.DeleteUserById(userParams)
 
 	if serviceErr != nil {
 		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
@@ -146,10 +146,10 @@ func (uc *UserController) DeleteUserById(resWriter http.ResponseWriter, req *htt
 }
 
 func (uc *UserController) GetProfile(resWriter http.ResponseWriter, req *http.Request) {
-	userPayload := req.Context().Value("payload").(*dtos.GetUserById)
+	userParams := req.Context().Value("params").(*dtos.GetUserByIdParams)
 
 	// call the fetch user by id service
-	userModel, serviceErr := uc.UserService.GetUserById(userPayload)
+	userModel, serviceErr := uc.UserService.GetUserById(userParams)
 
 	if serviceErr != nil {
 		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{

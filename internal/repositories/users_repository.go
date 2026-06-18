@@ -11,11 +11,11 @@ import (
 )
 
 type UserRepositoryInterface interface {
-	CreateUser(userPayload *dtos.CreateUser) *utils.AppError
+	CreateUser(userPayload *dtos.CreateUserPayload) *utils.AppError
 	GetAllUsers() ([]*models.UserModel, *utils.AppError)
-	GetUserById(userPayload *dtos.GetUserById) (*models.UserModel, *utils.AppError)
-	DeleteUserById(userPayload *dtos.DeleteUserById) *utils.AppError
-	GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmail) (*models.UserModel, *utils.AppError)
+	GetUserById(userPayload *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError)
+	DeleteUserById(userPayload *dtos.DeleteUserByIdParams) *utils.AppError
+	GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmailPayload) (*models.UserModel, *utils.AppError)
 }
 
 type UserRepository struct {
@@ -24,7 +24,7 @@ type UserRepository struct {
 	serverConfig *config.ServerConfig
 }
 
-func (ur *UserRepository) CreateUser(userPayload *dtos.CreateUser) *utils.AppError {
+func (ur *UserRepository) CreateUser(userPayload *dtos.CreateUserPayload) *utils.AppError {
 	// insert into the db
 	query := "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"
 	result, queryExecErr := ur.db.Exec(query, userPayload.Username, userPayload.Email, userPayload.Password)
@@ -99,7 +99,7 @@ func (ur *UserRepository) GetAllUsers() ([]*models.UserModel, *utils.AppError) {
 	return userModels, nil
 }
 
-func (ur *UserRepository) GetUserById(userPayload *dtos.GetUserById) (*models.UserModel, *utils.AppError) {
+func (ur *UserRepository) GetUserById(userPayload *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError) {
 	// create the dummy instance
 	userModel := &models.UserModel{}
 
@@ -111,7 +111,7 @@ func (ur *UserRepository) GetUserById(userPayload *dtos.GetUserById) (*models.Us
 	if queryErr != nil {
 		if queryErr == sql.ErrNoRows {
 			ur.logger.Error("Such user not found",
-				zap.String("id", userPayload.ID))
+				zap.Int("user_id", userPayload.ID))
 
 			return nil, utils.NotFound("User with such id not found")
 		}
@@ -123,15 +123,13 @@ func (ur *UserRepository) GetUserById(userPayload *dtos.GetUserById) (*models.Us
 	}
 
 	ur.logger.Info("Successfully fetched the user from the database",
-		zap.String("user_id", userModel.ID),
-		zap.String("user_username", userModel.Username),
-		zap.String("user_email", userModel.Email),
+		zap.Int("user_id", userModel.ID),
 	)
 
 	return userModel, nil
 }
 
-func (ur *UserRepository) GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmail) (*models.UserModel, *utils.AppError) {
+func (ur *UserRepository) GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmailPayload) (*models.UserModel, *utils.AppError) {
 	existingUserModel := &models.UserModel{}
 
 	// fetch from the db
@@ -156,7 +154,7 @@ func (ur *UserRepository) GetUserByUsernameAndEmail(userPayload *dtos.GetUserByU
 	return existingUserModel, nil
 }
 
-func (ur *UserRepository) DeleteUserById(userPayload *dtos.DeleteUserById) *utils.AppError {
+func (ur *UserRepository) DeleteUserById(userPayload *dtos.DeleteUserByIdParams) *utils.AppError {
 	// prepare and execute the query
 	query := "DELETE FROM users WHERE id = ?"
 	result, queryExecErr := ur.db.Exec(query, userPayload.ID)
@@ -180,13 +178,13 @@ func (ur *UserRepository) DeleteUserById(userPayload *dtos.DeleteUserById) *util
 
 	if rowsAffected == 0 {
 		ur.logger.Error("No user has been deleted from the database",
-			zap.String("id", userPayload.ID))
+			zap.Int("user_id", userPayload.ID))
 
 		return utils.NotFound("User with such id not found")
 	}
 
 	ur.logger.Info("Successfully deleted the user from the database",
-		zap.String("user_id", userPayload.ID))
+		zap.Int("user_id", userPayload.ID))
 
 	return nil
 }
