@@ -6,9 +6,18 @@ type CreateRolePayload struct {
 }
 
 type GetRoleByIdParams struct {
-	ID int `validate:"required,gte=1"`
+	ID int `json:"id" validate:"required,gte=1"`
 }
 
 type DeleteRoleByIdParams struct {
-	ID int `validate:"required,gte=1"`
+	ID int `json:"id" validate:"required,gte=1"`
+}
+
+type UpdateRoleByIdParams struct {
+	ID int `json:"id" validate:"required,gte=1"`
+}
+
+type UpdateRoleByIdPayload struct {
+	Name        string `json:"name" validate:"min=6,max=100"`
+	Description string `json:"description" validate:"min=6,max=100"`
 }
