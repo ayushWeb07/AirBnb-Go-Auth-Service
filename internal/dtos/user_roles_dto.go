@@ -1,0 +1,20 @@
+package dtos
+
+type GetRolesOfUserPayload struct {
+	UserID int `json:"user_id" validate:"required,gte=1"`
+}
+
+type AssignRoleToUserPayload struct {
+	UserID int `json:"user_id" validate:"required,gte=1"`
+	RoleID int `json:"role_id" validate:"required,gte=1"`
+}
+
+type RemoveRoleFromUserPayload struct {
+	UserID int `json:"user_id" validate:"required,gte=1"`
+	RoleID int `json:"role_id" validate:"required,gte=1"`
+}
+
+type CheckUserHasRolePayload struct {
+	UserID int `json:"user_id" validate:"required,gte=1"`
+	RoleID int `json:"role_id" validate:"required,gte=1"`
+}
