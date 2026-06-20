@@ -33,7 +33,7 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 				userId, err := strconv.Atoi(chi.URLParam(req, "id"))
 
 				if err != nil {
-					return nil, utils.InternalServerError("User id must be provided in integer: " + err.Error())
+					return nil, utils.BadRequest("User id must be provided in integer: " + err.Error())
 				}
 
 				return &dtos.GetUserByIdParams{
@@ -47,7 +47,7 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 				userId, err := strconv.Atoi(chi.URLParam(req, "id"))
 
 				if err != nil {
-					return nil, utils.InternalServerError("User id must be provided in integer: " + err.Error())
+					return nil, utils.BadRequest("User id must be provided in integer: " + err.Error())
 				}
 
 				return &dtos.DeleteUserByIdParams{

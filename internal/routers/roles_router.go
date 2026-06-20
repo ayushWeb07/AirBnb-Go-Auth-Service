@@ -30,7 +30,7 @@ func (roleRouter *RoleRouter) Register(r *chi.Mux) {
 				roleId, err := strconv.Atoi(chi.URLParam(req, "id"))
 
 				if err != nil {
-					return nil, utils.InternalServerError("Role id must be provided in integer: " + err.Error())
+					return nil, utils.BadRequest("Role id must be provided in integer: " + err.Error())
 				}
 
 				return &dtos.GetRoleByIdParams{
@@ -44,7 +44,7 @@ func (roleRouter *RoleRouter) Register(r *chi.Mux) {
 				roleId, err := strconv.Atoi(chi.URLParam(req, "id"))
 
 				if err != nil {
-					return nil, utils.InternalServerError("Role id must be provided in integer: " + err.Error())
+					return nil, utils.BadRequest("Role id must be provided in integer: " + err.Error())
 				}
 
 				return &dtos.UpdateRoleByIdParams{
@@ -58,7 +58,7 @@ func (roleRouter *RoleRouter) Register(r *chi.Mux) {
 				roleId, err := strconv.Atoi(chi.URLParam(req, "id"))
 
 				if err != nil {
-					return nil, utils.InternalServerError("Role id must be provided in integer: " + err.Error())
+					return nil, utils.BadRequest("Role id must be provided in integer: " + err.Error())
 				}
 
 				return &dtos.DeleteRoleByIdParams{

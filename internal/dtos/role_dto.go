@@ -18,6 +18,6 @@ type UpdateRoleByIdParams struct {
 }
 
 type UpdateRoleByIdPayload struct {
-	Name        string `json:"name" validate:"min=6,max=100"`
-	Description string `json:"description" validate:"min=6,max=100"`
+	Name        string `json:"name" validate:"required,min=6,max=100"`
+	Description string `json:"description" validate:"required,min=6,max=100"`
 }
