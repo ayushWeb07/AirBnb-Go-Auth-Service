@@ -24,10 +24,12 @@ func (rolePermissionsRouter *RolePermissionsRouter) Register(r *chi.Mux) {
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.RemovePermissionFromRolePayload]).Post("/remove", rolePermissionsRouter.RolePermissionsController.RemovePermissionFromRole)
 
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckRoleHasPermissionPayload]).Get("/check", rolePermissionsRouter.RolePermissionsController.CheckRoleHasPermission)
+	})
 
-		r.With(middlewares.DecodeAndValidateRequestBody[dtos.GetPermissionsOfUserPayload]).Get("/user", rolePermissionsRouter.RolePermissionsController.GetPermissionsOfUser)
+	r.Route("/api/v1/user-permissions", func(r chi.Router) {
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.GetPermissionsOfUserPayload]).Get("/", rolePermissionsRouter.RolePermissionsController.GetPermissionsOfUser)
 
-		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckUserHasPermissionPayload]).Get("/user/check", rolePermissionsRouter.RolePermissionsController.CheckUserHasPermission)
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckUserHasPermissionPayload]).Get("/check", rolePermissionsRouter.RolePermissionsController.CheckUserHasPermission)
 	})
 }
 
