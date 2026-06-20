@@ -53,14 +53,26 @@ func RegisterRouters(logger *zap.Logger, db *sql.DB, serverConfig *config.Server
 
 	// register user roles router
 	userRolesRepository := repositories.NewUserRolesRepository(logger, db, serverConfig)
-	userRepository_2 := repositories.NewUserRepository(logger, db, serverConfig)
-	roleRepository_2 := repositories.NewRoleRepository(logger, db, serverConfig)
+	userRolesUserRepository := repositories.NewUserRepository(logger, db, serverConfig)
+	userRolesRoleRepository := repositories.NewRoleRepository(logger, db, serverConfig)
 
-	userRolesService := services.NewUserRolesService(userRolesRepository, userRepository_2, roleRepository_2, logger, serverConfig)
+	userRolesService := services.NewUserRolesService(userRolesRepository, userRolesUserRepository, userRolesRoleRepository, logger, serverConfig)
 	userRolesController := controllers.NewUserRolesController(userRolesService, logger, serverConfig)
 	userRolesRouter := NewUserRolesRouter(userRolesController, logger, serverConfig)
 
 	userRolesRouter.Register(router)
+
+	// register role permissions router
+	rolePermissionsRepository := repositories.NewRolePermissionsRepository(logger, db, serverConfig)
+	rolePermissionsUserRepository := repositories.NewUserRepository(logger, db, serverConfig)
+	rolePermissionsRoleRepository := repositories.NewRoleRepository(logger, db, serverConfig)
+	rolePermissionsPermissionRepository := repositories.NewPermissionRepository(logger, db, serverConfig)
+
+	rolePermissionsService := services.NewRolePermissionsService(rolePermissionsRepository, rolePermissionsRoleRepository, rolePermissionsPermissionRepository, rolePermissionsUserRepository, logger, serverConfig)
+	rolePermissionsController := controllers.NewRolePermissionsController(rolePermissionsService, logger, serverConfig)
+	rolePermissionsRouter := NewRolePermissionsRouter(rolePermissionsController, logger, serverConfig)
+
+	rolePermissionsRouter.Register(router)
 
 	// register the reverse proxy servers
 	hotelService := utils.ProxyToService("http://localhost:3000")
