@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/database/models"
@@ -15,6 +16,7 @@ type UserRolesRepositoryInterface interface {
 	AssignRoleToUser(userRolesPayload *dtos.AssignRoleToUserPayload) *utils.AppError
 	RemoveRoleFromUser(userRolesPayload *dtos.RemoveRoleFromUserPayload) *utils.AppError
 	CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) (bool, *utils.AppError)
+	CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) (bool, *utils.AppError)
 }
 
 type UserRolesRepository struct {
@@ -172,6 +174,46 @@ func (userRolesRepository *UserRolesRepository) CheckUserHasRole(userRolesPayloa
 	)
 
 	return true, nil
+}
+
+func (userRolesRepository *UserRolesRepository) CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) (bool, *utils.AppError) {
+	// create the dummy instance
+	count := 0
+
+	// load the rows
+	query := "SELECT COUNT(*) FROM user_roles ur INNER JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = ? AND r.name IN (?)"
+
+	roleNamesStr := strings.Join(userRolesPayload.RoleNames, ",")
+
+	queryErr := userRolesRepository.db.QueryRow(query, userRolesPayload.UserID, roleNamesStr).Scan(&count)
+
+	if queryErr != nil {
+		if queryErr == sql.ErrNoRows {
+			userRolesRepository.logger.Error("No roles assigned to the user",
+				zap.String("role_names", roleNamesStr))
+
+			return false, utils.NotFound("No roles assigned to the user")
+		}
+
+		userRolesRepository.logger.Error("Failed to check if user has all the roles",
+			zap.String("error", queryErr.Error()))
+
+		return false, utils.InternalServerError("Failed to check if user has all the roles: " + queryErr.Error())
+	}
+
+	hasAllRoles := count == len(userRolesPayload.RoleNames)
+
+	//if hasAllRoles {
+	//	userRolesRepository.logger.Error("User does not have all the required roles",
+	//		zap.Strings("role_names", userRolesPayload.RoleNames))
+	//
+	//	return false, utils.NotFound("User does not have all the required roles")
+	//}
+	//
+	//userRolesRepository.logger.Info("User has all the required roles",
+	//	zap.Int("count", len(userRolesPayload.RoleNames)))
+
+	return hasAllRoles, nil
 }
 
 func NewUserRolesRepository(logger *zap.Logger, db *sql.DB, serverConfig *config.ServerConfig) UserRolesRepositoryInterface {

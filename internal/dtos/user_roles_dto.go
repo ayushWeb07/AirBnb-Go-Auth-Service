@@ -18,3 +18,8 @@ type CheckUserHasRolePayload struct {
 	UserID int `json:"user_id" validate:"required,gte=1"`
 	RoleID int `json:"role_id" validate:"required,gte=1"`
 }
+
+type CheckUserHasAllRolesPayload struct {
+	UserID    int      `json:"user_id" validate:"required,gte=1"`
+	RoleNames []string `json:"role_names" validate:"required,min=1,unique"`
+}

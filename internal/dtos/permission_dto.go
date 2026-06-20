@@ -20,8 +20,8 @@ type UpdatePermissionByIdParams struct {
 }
 
 type UpdatePermissionByIdPayload struct {
-	Name        string `json:"name" validate:"min=6,max=100"`
-	Description string `json:"description" validate:"min=6,max=100"`
-	Resource    string `json:"resource" validate:"min=3,max=50"`
-	Action      string `json:"action" validate:"min=3,max=50"`
+	Name        string `json:"name" validate:"required,min=6,max=100"`
+	Description string `json:"description" validate:"required,min=6,max=100"`
+	Resource    string `json:"resource" validate:"required,min=3,max=50"`
+	Action      string `json:"action" validate:"required,min=3,max=50"`
 }
