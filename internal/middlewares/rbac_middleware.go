@@ -14,20 +14,10 @@ func RequireUserAllRoles(userRolesRepository *repositories.UserRolesRepository, 
 			userParams := req.Context().Value("params").(*dtos.GetUserByIdParams)
 
 			// call the repository layer
-			hasAllRoles, err := userRolesRepository.CheckUserHasAllRoles(&dtos.CheckUserHasAllRolesPayload{
+			hasAllRoles := userRolesRepository.CheckUserHasAllRoles(&dtos.CheckUserHasAllRolesPayload{
 				UserID:    userParams.ID,
 				RoleNames: roleNames,
 			})
-
-			if err != nil {
-				utils.WriteJsonResponse(http.StatusUnauthorized, resWriter, map[string]any{
-					"success": false,
-					"message": "RBAC authorization failed",
-					"error":   "Authorization failed: " + err.Error(),
-				})
-
-				return
-			}
 
 			if !hasAllRoles {
 				utils.WriteJsonResponse(http.StatusUnauthorized, resWriter, map[string]any{

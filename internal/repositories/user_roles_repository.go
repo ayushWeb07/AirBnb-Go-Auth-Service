@@ -16,7 +16,7 @@ type UserRolesRepositoryInterface interface {
 	AssignRoleToUser(userRolesPayload *dtos.AssignRoleToUserPayload) *utils.AppError
 	RemoveRoleFromUser(userRolesPayload *dtos.RemoveRoleFromUserPayload) *utils.AppError
 	CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) bool
-	CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) (bool, *utils.AppError)
+	CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) bool
 }
 
 type UserRolesRepository struct {
@@ -169,7 +169,7 @@ func (userRolesRepository *UserRolesRepository) CheckUserHasRole(userRolesPayloa
 	return true
 }
 
-func (userRolesRepository *UserRolesRepository) CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) (bool, *utils.AppError) {
+func (userRolesRepository *UserRolesRepository) CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) bool {
 	// create the dummy instance
 	count := 0
 
@@ -181,22 +181,17 @@ func (userRolesRepository *UserRolesRepository) CheckUserHasAllRoles(userRolesPa
 	queryErr := userRolesRepository.db.QueryRow(query, userRolesPayload.UserID, roleNamesStr).Scan(&count)
 
 	if queryErr != nil {
-		if queryErr == sql.ErrNoRows {
-			userRolesRepository.logger.Error("No roles assigned to the user",
-				zap.String("role_names", roleNamesStr))
+		userRolesRepository.logger.Error("User does not have all the required roles",
+			zap.Int("user_id", userRolesPayload.UserID),
+			zap.String("role_names", roleNamesStr),
+		)
 
-			return false, utils.NotFound("No roles assigned to the user")
-		}
-
-		userRolesRepository.logger.Error("Failed to check if user has all the roles",
-			zap.String("error", queryErr.Error()))
-
-		return false, utils.InternalServerError("Failed to check if user has all the roles: " + queryErr.Error())
+		return false
 	}
 
 	hasAllRoles := count == len(userRolesPayload.RoleNames)
 
-	return hasAllRoles, nil
+	return hasAllRoles
 }
 
 func NewUserRolesRepository(logger *zap.Logger, db *sql.DB, serverConfig *config.ServerConfig) UserRolesRepositoryInterface {
