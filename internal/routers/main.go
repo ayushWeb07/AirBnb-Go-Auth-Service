@@ -43,6 +43,14 @@ func RegisterRouters(logger *zap.Logger, db *sql.DB, serverConfig *config.Server
 
 	roleRouter.Register(router)
 
+	// register roles router
+	permissionRepository := repositories.NewPermissionRepository(logger, db, serverConfig)
+	permissionService := services.NewPermissionService(permissionRepository, logger, serverConfig)
+	permissionController := controllers.NewPermissionController(permissionService, logger, serverConfig)
+	permissionRouter := NewPermissionRouter(permissionController, logger, serverConfig)
+
+	permissionRouter.Register(router)
+
 	// register the reverse proxy servers
 	hotelService := utils.ProxyToService("http://localhost:3000")
 	bookingService := utils.ProxyToService("http://localhost:3010")

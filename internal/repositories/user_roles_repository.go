@@ -203,16 +203,6 @@ func (userRolesRepository *UserRolesRepository) CheckUserHasAllRoles(userRolesPa
 
 	hasAllRoles := count == len(userRolesPayload.RoleNames)
 
-	//if hasAllRoles {
-	//	userRolesRepository.logger.Error("User does not have all the required roles",
-	//		zap.Strings("role_names", userRolesPayload.RoleNames))
-	//
-	//	return false, utils.NotFound("User does not have all the required roles")
-	//}
-	//
-	//userRolesRepository.logger.Info("User has all the required roles",
-	//	zap.Int("count", len(userRolesPayload.RoleNames)))
-
 	return hasAllRoles, nil
 }
 
