@@ -12,12 +12,12 @@ import (
 
 type RolePermissionsRepositoryInterface interface {
 	GetPermissionsOfUser(userPermissionsPayload *dtos.GetPermissionsOfUserPayload) ([]*models.PermissionModel, *utils.AppError)
-	CheckUserHasPermission(userPermissionsPayload *dtos.CheckUserHasPermissionPayload) (bool, *utils.AppError)
+	CheckUserHasPermission(userPermissionsPayload *dtos.CheckUserHasPermissionPayload) bool
 
 	GetPermissionsOfRole(rolePermissionsPayload *dtos.GetPermissionsOfRolePayload) ([]*models.PermissionModel, *utils.AppError)
 	AssignPermissionToRole(rolePermissionsPayload *dtos.AssignPermissionToRolePayload) *utils.AppError
 	RemovePermissionFromRole(rolePermissionsPayload *dtos.RemovePermissionFromRolePayload) *utils.AppError
-	CheckRoleHasPermission(rolePermissionsPayload *dtos.CheckRoleHasPermissionPayload) (bool, *utils.AppError)
+	CheckRoleHasPermission(rolePermissionsPayload *dtos.CheckRoleHasPermissionPayload) bool
 }
 
 type RolePermissionsRepository struct {
@@ -79,7 +79,7 @@ func (rolePermissionsRepository *RolePermissionsRepository) GetPermissionsOfUser
 	return permissionModels, nil
 }
 
-func (rolePermissionsRepository *RolePermissionsRepository) CheckUserHasPermission(userPermissionsPayload *dtos.CheckUserHasPermissionPayload) (bool, *utils.AppError) {
+func (rolePermissionsRepository *RolePermissionsRepository) CheckUserHasPermission(userPermissionsPayload *dtos.CheckUserHasPermissionPayload) bool {
 	// create the dummy instance
 	permissionModel := &models.PermissionModel{}
 
@@ -93,19 +93,12 @@ func (rolePermissionsRepository *RolePermissionsRepository) CheckUserHasPermissi
 	queryErr := rolePermissionsRepository.db.QueryRow(query, userPermissionsPayload.UserID, userPermissionsPayload.PermissionID).Scan(&permissionModel.ID)
 
 	if queryErr != nil {
-		if queryErr == sql.ErrNoRows {
-			rolePermissionsRepository.logger.Error("User does not have the permission",
-				zap.Int("user_id", userPermissionsPayload.UserID),
-				zap.Int("permission_id", userPermissionsPayload.PermissionID),
-			)
+		rolePermissionsRepository.logger.Error("User does not have the permission",
+			zap.Int("user_id", userPermissionsPayload.UserID),
+			zap.Int("permission_id", userPermissionsPayload.PermissionID),
+		)
 
-			return false, utils.BadRequest("User does not have the permission")
-		}
-
-		rolePermissionsRepository.logger.Error("Failed to check if user has the permission",
-			zap.String("error", queryErr.Error()))
-
-		return false, utils.InternalServerError("Failed to check if user has the permission: " + queryErr.Error())
+		return false
 	}
 
 	rolePermissionsRepository.logger.Info("User has the particular permission",
@@ -113,7 +106,7 @@ func (rolePermissionsRepository *RolePermissionsRepository) CheckUserHasPermissi
 		zap.Int("permission_id", userPermissionsPayload.PermissionID),
 	)
 
-	return true, nil
+	return true
 }
 
 func (rolePermissionsRepository *RolePermissionsRepository) GetPermissionsOfRole(rolePermissionsPayload *dtos.GetPermissionsOfRolePayload) ([]*models.PermissionModel, *utils.AppError) {
@@ -234,7 +227,7 @@ func (rolePermissionsRepository *RolePermissionsRepository) RemovePermissionFrom
 	return nil
 }
 
-func (rolePermissionsRepository *RolePermissionsRepository) CheckRoleHasPermission(rolePermissionsPayload *dtos.CheckRoleHasPermissionPayload) (bool, *utils.AppError) {
+func (rolePermissionsRepository *RolePermissionsRepository) CheckRoleHasPermission(rolePermissionsPayload *dtos.CheckRoleHasPermissionPayload) bool {
 	// create the dummy instance
 	rolePermissionModel := &models.RolePermissionModel{}
 
@@ -244,19 +237,12 @@ func (rolePermissionsRepository *RolePermissionsRepository) CheckRoleHasPermissi
 	queryErr := rolePermissionsRepository.db.QueryRow(query, rolePermissionsPayload.RoleID, rolePermissionsPayload.PermissionID).Scan(&rolePermissionModel.ID)
 
 	if queryErr != nil {
-		if queryErr == sql.ErrNoRows {
-			rolePermissionsRepository.logger.Error("Role does not have the permission",
-				zap.Int("role_id", rolePermissionsPayload.RoleID),
-				zap.Int("permission_id", rolePermissionsPayload.PermissionID),
-			)
+		rolePermissionsRepository.logger.Error("Role does not have the permission",
+			zap.Int("role_id", rolePermissionsPayload.RoleID),
+			zap.Int("permission_id", rolePermissionsPayload.PermissionID),
+		)
 
-			return false, utils.BadRequest("Role does not have the permission")
-		}
-
-		rolePermissionsRepository.logger.Error("Failed to check if role has the permission",
-			zap.String("error", queryErr.Error()))
-
-		return false, utils.InternalServerError("Failed to check if role has the permission: " + queryErr.Error())
+		return false
 	}
 
 	rolePermissionsRepository.logger.Info("Role has the particular permission",
@@ -264,7 +250,7 @@ func (rolePermissionsRepository *RolePermissionsRepository) CheckRoleHasPermissi
 		zap.Int("permission_id", rolePermissionsPayload.PermissionID),
 	)
 
-	return true, nil
+	return true
 }
 
 func NewRolePermissionsRepository(logger *zap.Logger, db *sql.DB, serverConfig *config.ServerConfig) RolePermissionsRepositoryInterface {

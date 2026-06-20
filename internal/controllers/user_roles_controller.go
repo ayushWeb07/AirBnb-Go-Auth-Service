@@ -15,6 +15,7 @@ type UserRolesControllerInterface interface {
 	AssignRoleToUser(resWriter http.ResponseWriter, req *http.Request)
 	RemoveRoleFromUser(resWriter http.ResponseWriter, req *http.Request)
 	CheckUserHasRole(resWriter http.ResponseWriter, req *http.Request)
+	CheckUserHasAllRoles(resWriter http.ResponseWriter, req *http.Request)
 }
 
 type UserRolesController struct {
@@ -118,6 +119,37 @@ func (userRolesController *UserRolesController) CheckUserHasRole(resWriter http.
 	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
 		"success": true,
 		"message": "Yes, user is assigned with the mentioned role",
+	})
+}
+
+func (userRolesController *UserRolesController) CheckUserHasAllRoles(resWriter http.ResponseWriter, req *http.Request) {
+	userRolesPayload := req.Context().Value("payload").(*dtos.CheckUserHasAllRolesPayload)
+
+	// call the check user roles service
+	hasAllRoles, serviceErr := userRolesController.UserRolesService.CheckUserHasAllRoles(userRolesPayload)
+
+	if serviceErr != nil {
+		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
+			"success": serviceErr.Success,
+			"message": "Something went wrong while checking if user has all the roles",
+			"error":   serviceErr.Error(),
+		})
+
+		return
+	}
+
+	if !hasAllRoles {
+		utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
+			"success": true,
+			"message": "No, user is not assigned with all the mentioned roles",
+		})
+
+		return
+	}
+
+	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
+		"success": true,
+		"message": "Yes, user is assigned with all the mentioned roles",
 	})
 }
 

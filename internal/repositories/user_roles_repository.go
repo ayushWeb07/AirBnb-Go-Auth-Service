@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
@@ -16,6 +17,7 @@ type UserRolesRepositoryInterface interface {
 	AssignRoleToUser(userRolesPayload *dtos.AssignRoleToUserPayload) *utils.AppError
 	RemoveRoleFromUser(userRolesPayload *dtos.RemoveRoleFromUserPayload) *utils.AppError
 	CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) bool
+
 	CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) bool
 }
 
@@ -170,15 +172,31 @@ func (userRolesRepository *UserRolesRepository) CheckUserHasRole(userRolesPayloa
 }
 
 func (userRolesRepository *UserRolesRepository) CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) bool {
-	// create the dummy instance
 	count := 0
 
-	// load the rows
-	query := "SELECT COUNT(*) FROM user_roles ur INNER JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = ? AND r.name IN (?)"
+	// build the query
+	placeholders := make([]string, len(userRolesPayload.RoleNames))
+	args := make([]any, 0, len(userRolesPayload.RoleNames)+1)
 
-	roleNamesStr := strings.Join(userRolesPayload.RoleNames, ",")
+	args = append(args, userRolesPayload.UserID)
 
-	queryErr := userRolesRepository.db.QueryRow(query, userRolesPayload.UserID, roleNamesStr).Scan(&count)
+	for i, role := range userRolesPayload.RoleNames {
+		placeholders[i] = "?"
+		args = append(args, role)
+	}
+
+	roleNamesStr := strings.Join(placeholders, ",")
+
+	query := fmt.Sprintf(
+		`
+		SELECT COUNT(*)
+		FROM user_roles ur
+		INNER JOIN roles r ON r.id = ur.role_id
+		WHERE ur.user_id = ?
+		AND r.name IN (%s)
+		`, roleNamesStr)
+
+	queryErr := userRolesRepository.db.QueryRow(query, args...).Scan(&count)
 
 	if queryErr != nil {
 		userRolesRepository.logger.Error("User does not have all the required roles",

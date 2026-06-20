@@ -14,6 +14,8 @@ type UserRolesServiceInterface interface {
 	AssignRoleToUser(userRolesPayload *dtos.AssignRoleToUserPayload) *utils.AppError
 	RemoveRoleFromUser(userRolesPayload *dtos.RemoveRoleFromUserPayload) *utils.AppError
 	CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) (bool, *utils.AppError)
+
+	CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) (bool, *utils.AppError)
 }
 
 type UserRolesService struct {
@@ -123,6 +125,21 @@ func (userRolesService *UserRolesService) CheckUserHasRole(userRolesPayload *dto
 	// call the check user role repository
 	hasRole := userRolesService.UserRolesRepository.CheckUserHasRole(userRolesPayload)
 	return hasRole, nil
+}
+
+func (userRolesService *UserRolesService) CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) (bool, *utils.AppError) {
+	userRolesService.logger.Info("Check user has all roles service called...")
+
+	// check if user exists
+	_, userRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
+
+	if userRepositoryErr != nil {
+		return false, userRepositoryErr
+	}
+
+	// call the check user role repository
+	hasAllRoles := userRolesService.UserRolesRepository.CheckUserHasAllRoles(userRolesPayload)
+	return hasAllRoles, nil
 }
 
 func NewUserRolesService(userRolesRepository repositories.UserRolesRepositoryInterface, userRepository repositories.UserRepositoryInterface, roleRepository repositories.RoleRepositoryInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserRolesServiceInterface {

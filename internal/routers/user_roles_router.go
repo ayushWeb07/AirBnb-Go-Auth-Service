@@ -24,6 +24,8 @@ func (userRolesRouter *UserRolesRouter) Register(r *chi.Mux) {
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.RemoveRoleFromUserPayload]).Post("/remove", userRolesRouter.UserRolesController.RemoveRoleFromUser)
 
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckUserHasRolePayload]).Get("/check", userRolesRouter.UserRolesController.CheckUserHasRole)
+
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckUserHasAllRolesPayload]).Get("/check-all", userRolesRouter.UserRolesController.CheckUserHasAllRoles)
 	})
 }
 
