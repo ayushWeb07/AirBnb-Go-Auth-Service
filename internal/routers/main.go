@@ -53,7 +53,10 @@ func RegisterRouters(logger *zap.Logger, db *sql.DB, serverConfig *config.Server
 
 	// register user roles router
 	userRolesRepository := repositories.NewUserRolesRepository(logger, db, serverConfig)
-	userRolesService := services.NewUserRolesService(userRolesRepository, logger, serverConfig)
+	userRepository_2 := repositories.NewUserRepository(logger, db, serverConfig)
+	roleRepository_2 := repositories.NewRoleRepository(logger, db, serverConfig)
+
+	userRolesService := services.NewUserRolesService(userRolesRepository, userRepository_2, roleRepository_2, logger, serverConfig)
 	userRolesController := controllers.NewUserRolesController(userRolesService, logger, serverConfig)
 	userRolesRouter := NewUserRolesRouter(userRolesController, logger, serverConfig)
 

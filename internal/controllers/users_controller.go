@@ -96,7 +96,7 @@ func (uc *UserController) GetAllUsers(resWriter http.ResponseWriter, req *http.R
 	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
 		"success": true,
 		"message": "Successfully fetched all the users",
-		"count":   len(userModels),
+		"users":   userModels,
 	})
 }
 

@@ -15,7 +15,7 @@ type UserRolesRepositoryInterface interface {
 	GetRolesOfUser(userRolesPayload *dtos.GetRolesOfUserPayload) ([]*models.RoleModel, *utils.AppError)
 	AssignRoleToUser(userRolesPayload *dtos.AssignRoleToUserPayload) *utils.AppError
 	RemoveRoleFromUser(userRolesPayload *dtos.RemoveRoleFromUserPayload) *utils.AppError
-	CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) (bool, *utils.AppError)
+	CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) bool
 	CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) (bool, *utils.AppError)
 }
 
@@ -143,7 +143,7 @@ func (userRolesRepository *UserRolesRepository) RemoveRoleFromUser(userRolesPayl
 	return nil
 }
 
-func (userRolesRepository *UserRolesRepository) CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) (bool, *utils.AppError) {
+func (userRolesRepository *UserRolesRepository) CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) bool {
 	// create the dummy instance
 	userRoleModel := &models.UserRoleModel{}
 
@@ -153,19 +153,12 @@ func (userRolesRepository *UserRolesRepository) CheckUserHasRole(userRolesPayloa
 	queryErr := userRolesRepository.db.QueryRow(query, userRolesPayload.UserID, userRolesPayload.RoleID).Scan(&userRoleModel.ID)
 
 	if queryErr != nil {
-		if queryErr == sql.ErrNoRows {
-			userRolesRepository.logger.Error("User does not have the role",
-				zap.Int("user_id", userRolesPayload.UserID),
-				zap.Int("role_id", userRolesPayload.RoleID),
-			)
+		userRolesRepository.logger.Error("User does not have the role",
+			zap.Int("user_id", userRolesPayload.UserID),
+			zap.Int("role_id", userRolesPayload.RoleID),
+		)
 
-			return false, utils.BadRequest("User does not have the role")
-		}
-
-		userRolesRepository.logger.Error("Failed to check if user has the role",
-			zap.String("error", queryErr.Error()))
-
-		return false, utils.InternalServerError("Failed to check if user has the role: " + queryErr.Error())
+		return false
 	}
 
 	userRolesRepository.logger.Info("User has the particular role",
@@ -173,7 +166,7 @@ func (userRolesRepository *UserRolesRepository) CheckUserHasRole(userRolesPayloa
 		zap.Int("role_id", userRolesPayload.RoleID),
 	)
 
-	return true, nil
+	return true
 }
 
 func (userRolesRepository *UserRolesRepository) CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) (bool, *utils.AppError) {
