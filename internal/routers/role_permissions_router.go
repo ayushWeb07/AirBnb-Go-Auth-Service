@@ -11,6 +11,7 @@ import (
 
 type RolePermissionsRouter struct {
 	RolePermissionsController controllers.RolePermissionsControllerInterface
+	UserRolesController       controllers.UserRolesControllerInterface
 	logger                    *zap.Logger
 	serverConfig              *config.ServerConfig
 }
@@ -19,9 +20,15 @@ func (rolePermissionsRouter *RolePermissionsRouter) Register(r *chi.Mux) {
 	r.Route("/api/v1/role-permissions", func(r chi.Router) {
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.GetPermissionsOfRolePayload]).Get("/", rolePermissionsRouter.RolePermissionsController.GetPermissionsOfRole)
 
-		r.With(middlewares.DecodeAndValidateRequestBody[dtos.AssignPermissionToRolePayload]).Post("/assign", rolePermissionsRouter.RolePermissionsController.AssignPermissionToRole)
+		r.With(
+			middlewares.AuthMiddleware(rolePermissionsRouter.serverConfig),
+			middlewares.RequireUserAllRoles(rolePermissionsRouter.UserRolesController.GetUserRolesService().GetUserRolesRepository(), []string{"admin"}),
+			middlewares.DecodeAndValidateRequestBody[dtos.AssignPermissionToRolePayload]).Post("/assign", rolePermissionsRouter.RolePermissionsController.AssignPermissionToRole)
 
-		r.With(middlewares.DecodeAndValidateRequestBody[dtos.RemovePermissionFromRolePayload]).Post("/remove", rolePermissionsRouter.RolePermissionsController.RemovePermissionFromRole)
+		r.With(
+			middlewares.AuthMiddleware(rolePermissionsRouter.serverConfig),
+			middlewares.RequireUserAllRoles(rolePermissionsRouter.UserRolesController.GetUserRolesService().GetUserRolesRepository(), []string{"admin"}),
+			middlewares.DecodeAndValidateRequestBody[dtos.RemovePermissionFromRolePayload]).Post("/remove", rolePermissionsRouter.RolePermissionsController.RemovePermissionFromRole)
 
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckRoleHasPermissionPayload]).Get("/check", rolePermissionsRouter.RolePermissionsController.CheckRoleHasPermission)
 	})
@@ -33,9 +40,10 @@ func (rolePermissionsRouter *RolePermissionsRouter) Register(r *chi.Mux) {
 	})
 }
 
-func NewRolePermissionsRouter(controller controllers.RolePermissionsControllerInterface, logger *zap.Logger, serverConfig *config.ServerConfig) RouterInterface {
+func NewRolePermissionsRouter(controller controllers.RolePermissionsControllerInterface, userRolesController controllers.UserRolesControllerInterface, logger *zap.Logger, serverConfig *config.ServerConfig) RouterInterface {
 	newRolePermissionsRouter := &RolePermissionsRouter{
 		RolePermissionsController: controller,
+		UserRolesController:       userRolesController,
 		logger:                    logger,
 		serverConfig:              serverConfig,
 	}

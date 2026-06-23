@@ -54,7 +54,7 @@ func RegisterRouters(logger *zap.Logger, db *sql.DB, serverConfig *config.Server
 	permissionRouter := NewPermissionRouter(permissionController, logger, serverConfig)
 
 	userRolesRouter := NewUserRolesRouter(userRolesController, logger, serverConfig)
-	rolePermissionsRouter := NewRolePermissionsRouter(rolePermissionsController, logger, serverConfig)
+	rolePermissionsRouter := NewRolePermissionsRouter(rolePermissionsController, userRolesController, logger, serverConfig)
 
 	// register all routers
 	userRouter.Register(router)
