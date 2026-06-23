@@ -14,9 +14,10 @@ import (
 )
 
 type UserRouter struct {
-	UserController controllers.UserControllerInterface
-	logger         *zap.Logger
-	serverConfig   *config.ServerConfig
+	UserController      controllers.UserControllerInterface
+	UserRolesController controllers.UserRolesControllerInterface
+	logger              *zap.Logger
+	serverConfig        *config.ServerConfig
 }
 
 func (ur *UserRouter) Register(r *chi.Mux) {
@@ -26,7 +27,10 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 
 		r.Get("/", ur.UserController.GetAllUsers)
 
-		r.With(middlewares.AuthMiddleware(ur.serverConfig)).Get("/profile", ur.UserController.GetProfile)
+		r.With(
+			middlewares.AuthMiddleware(ur.serverConfig),
+			middlewares.RequireUserAnyRoles(ur.UserRolesController.GetUserRolesService().GetUserRolesRepository(), []string{"admin", "user", "moderator"}),
+		).Get("/profile", ur.UserController.GetProfile)
 
 		r.With(middlewares.DecodeAndValidateParams[dtos.GetUserByIdParams](
 			func(req *http.Request) (*dtos.GetUserByIdParams, *utils.AppError) {
@@ -58,11 +62,12 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 	})
 }
 
-func NewUserRouter(controller controllers.UserControllerInterface, logger *zap.Logger, serverConfig *config.ServerConfig) RouterInterface {
+func NewUserRouter(controller controllers.UserControllerInterface, userRolesController controllers.UserRolesControllerInterface, logger *zap.Logger, serverConfig *config.ServerConfig) RouterInterface {
 	newUserRouter := &UserRouter{
-		UserController: controller,
-		logger:         logger,
-		serverConfig:   serverConfig,
+		UserController:      controller,
+		UserRolesController: userRolesController,
+		logger:              logger,
+		serverConfig:        serverConfig,
 	}
 
 	return newUserRouter
