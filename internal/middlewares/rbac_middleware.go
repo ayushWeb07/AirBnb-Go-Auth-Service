@@ -8,7 +8,7 @@ import (
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/utils"
 )
 
-func RequireUserAllRoles(userRolesRepository *repositories.UserRolesRepository, roleNames []string) func(next http.Handler) http.Handler {
+func RequireUserAllRoles(userRolesRepository repositories.UserRolesRepositoryInterface, roleNames []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(resWriter http.ResponseWriter, req *http.Request) {
 			userParams := req.Context().Value("params").(*dtos.GetUserByIdParams)
@@ -34,7 +34,7 @@ func RequireUserAllRoles(userRolesRepository *repositories.UserRolesRepository, 
 	}
 }
 
-func RequireUserAnyRoles(userRolesRepository *repositories.UserRolesRepository, roleNames []string) func(next http.Handler) http.Handler {
+func RequireUserAnyRoles(userRolesRepository repositories.UserRolesRepositoryInterface, roleNames []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(resWriter http.ResponseWriter, req *http.Request) {
 			userParams := req.Context().Value("params").(*dtos.GetUserByIdParams)

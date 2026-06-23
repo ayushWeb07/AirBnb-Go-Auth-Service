@@ -17,6 +17,7 @@ type UserRolesControllerInterface interface {
 	CheckUserHasRole(resWriter http.ResponseWriter, req *http.Request)
 	CheckUserHasAllRoles(resWriter http.ResponseWriter, req *http.Request)
 	CheckUserHasAnyRoles(resWriter http.ResponseWriter, req *http.Request)
+	GetUserRolesService() services.UserRolesServiceInterface
 }
 
 type UserRolesController struct {
@@ -183,6 +184,10 @@ func (userRolesController *UserRolesController) CheckUserHasAnyRoles(resWriter h
 		"success": true,
 		"message": "Yes, user is assigned with any of the mentioned roles",
 	})
+}
+
+func (userRolesController *UserRolesController) GetUserRolesService() services.UserRolesServiceInterface {
+	return userRolesController.UserRolesService
 }
 
 func NewUserRolesController(service services.UserRolesServiceInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserRolesControllerInterface {

@@ -19,9 +19,15 @@ func (userRolesRouter *UserRolesRouter) Register(r *chi.Mux) {
 	r.Route("/api/v1/user-roles", func(r chi.Router) {
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.GetRolesOfUserPayload]).Get("/", userRolesRouter.UserRolesController.GetRolesOfUser)
 
-		r.With(middlewares.DecodeAndValidateRequestBody[dtos.AssignRoleToUserPayload]).Post("/assign", userRolesRouter.UserRolesController.AssignRoleToUser)
+		r.With(
+			middlewares.AuthMiddleware(userRolesRouter.serverConfig),
+			middlewares.RequireUserAllRoles(userRolesRouter.UserRolesController.GetUserRolesService().GetUserRolesRepository(), []string{"admin"}),
+			middlewares.DecodeAndValidateRequestBody[dtos.AssignRoleToUserPayload]).Post("/assign", userRolesRouter.UserRolesController.AssignRoleToUser)
 
-		r.With(middlewares.DecodeAndValidateRequestBody[dtos.RemoveRoleFromUserPayload]).Post("/remove", userRolesRouter.UserRolesController.RemoveRoleFromUser)
+		r.With(
+			middlewares.AuthMiddleware(userRolesRouter.serverConfig),
+			middlewares.RequireUserAllRoles(userRolesRouter.UserRolesController.GetUserRolesService().GetUserRolesRepository(), []string{"admin"}),
+			middlewares.DecodeAndValidateRequestBody[dtos.RemoveRoleFromUserPayload]).Post("/remove", userRolesRouter.UserRolesController.RemoveRoleFromUser)
 
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckUserHasRolePayload]).Get("/check", userRolesRouter.UserRolesController.CheckUserHasRole)
 
