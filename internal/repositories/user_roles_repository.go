@@ -19,6 +19,7 @@ type UserRolesRepositoryInterface interface {
 	CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) bool
 
 	CheckUserHasAllRoles(userRolesPayload *dtos.CheckUserHasAllRolesPayload) bool
+	CheckUserHasAnyRoles(userRolesPayload *dtos.CheckUserHasAnyRolesPayload) bool
 }
 
 type UserRolesRepository struct {
@@ -210,6 +211,47 @@ func (userRolesRepository *UserRolesRepository) CheckUserHasAllRoles(userRolesPa
 	hasAllRoles := count == len(userRolesPayload.RoleNames)
 
 	return hasAllRoles
+}
+
+func (userRolesRepository *UserRolesRepository) CheckUserHasAnyRoles(userRolesPayload *dtos.CheckUserHasAnyRolesPayload) bool {
+	count := 0
+
+	// build the query
+	placeholders := make([]string, len(userRolesPayload.RoleNames))
+	args := make([]any, 0, len(userRolesPayload.RoleNames)+1)
+
+	args = append(args, userRolesPayload.UserID)
+
+	for i, role := range userRolesPayload.RoleNames {
+		placeholders[i] = "?"
+		args = append(args, role)
+	}
+
+	roleNamesStr := strings.Join(placeholders, ",")
+
+	query := fmt.Sprintf(
+		`
+		SELECT COUNT(*)
+		FROM user_roles ur
+		INNER JOIN roles r ON r.id = ur.role_id
+		WHERE ur.user_id = ?
+		AND r.name IN (%s)
+		`, roleNamesStr)
+
+	queryErr := userRolesRepository.db.QueryRow(query, args...).Scan(&count)
+
+	if queryErr != nil {
+		userRolesRepository.logger.Error("User does not have any required roles",
+			zap.Int("user_id", userRolesPayload.UserID),
+			zap.String("role_names", roleNamesStr),
+		)
+
+		return false
+	}
+
+	hasAnyRoles := count != 0
+
+	return hasAnyRoles
 }
 
 func NewUserRolesRepository(logger *zap.Logger, db *sql.DB, serverConfig *config.ServerConfig) UserRolesRepositoryInterface {
