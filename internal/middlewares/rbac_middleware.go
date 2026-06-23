@@ -33,3 +33,29 @@ func RequireUserAllRoles(userRolesRepository *repositories.UserRolesRepository, 
 		})
 	}
 }
+
+func RequireUserAnyRoles(userRolesRepository *repositories.UserRolesRepository, roleNames []string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(resWriter http.ResponseWriter, req *http.Request) {
+			userParams := req.Context().Value("params").(*dtos.GetUserByIdParams)
+
+			// call the repository layer
+			hasAnyRoles := userRolesRepository.CheckUserHasAnyRoles(&dtos.CheckUserHasAnyRolesPayload{
+				UserID:    userParams.ID,
+				RoleNames: roleNames,
+			})
+
+			if !hasAnyRoles {
+				utils.WriteJsonResponse(http.StatusUnauthorized, resWriter, map[string]any{
+					"success": false,
+					"message": "RBAC authorization failed",
+					"error":   "You do not have any of the required roles",
+				})
+
+				return
+			}
+
+			next.ServeHTTP(resWriter, req)
+		})
+	}
+}
