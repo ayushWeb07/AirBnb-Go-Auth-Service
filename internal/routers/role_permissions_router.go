@@ -1,0 +1,52 @@
+package routers
+
+import (
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/controllers"
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/dtos"
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/middlewares"
+	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
+)
+
+type RolePermissionsRouter struct {
+	RolePermissionsController controllers.RolePermissionsControllerInterface
+	UserRolesController       controllers.UserRolesControllerInterface
+	logger                    *zap.Logger
+	serverConfig              *config.ServerConfig
+}
+
+func (rolePermissionsRouter *RolePermissionsRouter) Register(r *chi.Mux) {
+	r.Route("/api/v1/role-permissions", func(r chi.Router) {
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.GetPermissionsOfRolePayload]).Get("/", rolePermissionsRouter.RolePermissionsController.GetPermissionsOfRole)
+
+		r.With(
+			middlewares.AuthMiddleware(rolePermissionsRouter.serverConfig),
+			middlewares.RequireUserAllRoles(rolePermissionsRouter.UserRolesController.GetUserRolesService().GetUserRolesRepository(), []string{"admin"}),
+			middlewares.DecodeAndValidateRequestBody[dtos.AssignPermissionToRolePayload]).Post("/assign", rolePermissionsRouter.RolePermissionsController.AssignPermissionToRole)
+
+		r.With(
+			middlewares.AuthMiddleware(rolePermissionsRouter.serverConfig),
+			middlewares.RequireUserAllRoles(rolePermissionsRouter.UserRolesController.GetUserRolesService().GetUserRolesRepository(), []string{"admin"}),
+			middlewares.DecodeAndValidateRequestBody[dtos.RemovePermissionFromRolePayload]).Post("/remove", rolePermissionsRouter.RolePermissionsController.RemovePermissionFromRole)
+
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckRoleHasPermissionPayload]).Get("/check", rolePermissionsRouter.RolePermissionsController.CheckRoleHasPermission)
+	})
+
+	r.Route("/api/v1/user-permissions", func(r chi.Router) {
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.GetPermissionsOfUserPayload]).Get("/", rolePermissionsRouter.RolePermissionsController.GetPermissionsOfUser)
+
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CheckUserHasPermissionPayload]).Get("/check", rolePermissionsRouter.RolePermissionsController.CheckUserHasPermission)
+	})
+}
+
+func NewRolePermissionsRouter(controller controllers.RolePermissionsControllerInterface, userRolesController controllers.UserRolesControllerInterface, logger *zap.Logger, serverConfig *config.ServerConfig) RouterInterface {
+	newRolePermissionsRouter := &RolePermissionsRouter{
+		RolePermissionsController: controller,
+		UserRolesController:       userRolesController,
+		logger:                    logger,
+		serverConfig:              serverConfig,
+	}
+
+	return newRolePermissionsRouter
+}

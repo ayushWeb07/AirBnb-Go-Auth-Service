@@ -14,11 +14,11 @@ import (
 )
 
 type UserServiceInterface interface {
-	CreateUser(userPayload *dtos.CreateUser) *utils.AppError
-	LoginUser(userPayload *dtos.LoginUser) (string, *utils.AppError)
+	CreateUser(userPayload *dtos.CreateUserPayload) *utils.AppError
+	LoginUser(userPayload *dtos.LoginUserPayload) (string, *utils.AppError)
 	GetAllUsers() ([]*models.UserModel, *utils.AppError)
-	GetUserById(userPayload *dtos.GetUserById) (*models.UserModel, *utils.AppError)
-	DeleteUserById(userPayload *dtos.DeleteUserById) *utils.AppError
+	GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError)
+	DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError
 }
 
 type UserService struct {
@@ -27,11 +27,11 @@ type UserService struct {
 	serverConfig   *config.ServerConfig
 }
 
-func (us *UserService) CreateUser(userPayload *dtos.CreateUser) *utils.AppError {
+func (us *UserService) CreateUser(userPayload *dtos.CreateUserPayload) *utils.AppError {
 	us.logger.Info("Create user service called...")
 
 	// check if the user already exists
-	_, repositoryErr := us.UserRepository.GetUserByUsernameAndEmail(&dtos.GetUserByUsernameAndEmail{
+	_, repositoryErr := us.UserRepository.GetUserByUsernameAndEmail(&dtos.GetUserByUsernameAndEmailPayload{
 		Username: userPayload.Username,
 		Email:    userPayload.Email,
 	})
@@ -64,11 +64,11 @@ func (us *UserService) CreateUser(userPayload *dtos.CreateUser) *utils.AppError 
 	return nil
 }
 
-func (us *UserService) LoginUser(userPayload *dtos.LoginUser) (string, *utils.AppError) {
+func (us *UserService) LoginUser(userPayload *dtos.LoginUserPayload) (string, *utils.AppError) {
 	us.logger.Info("Login user service called...")
 
 	// fetch the user by username and email repository
-	existingUserModel, repositoryErr := us.UserRepository.GetUserByUsernameAndEmail(&dtos.GetUserByUsernameAndEmail{
+	existingUserModel, repositoryErr := us.UserRepository.GetUserByUsernameAndEmail(&dtos.GetUserByUsernameAndEmailPayload{
 		Username: userPayload.Username,
 		Email:    userPayload.Email,
 	})
@@ -116,19 +116,19 @@ func (us *UserService) GetAllUsers() ([]*models.UserModel, *utils.AppError) {
 	return userModels, repositoryErr
 }
 
-func (us *UserService) GetUserById(userPayload *dtos.GetUserById) (*models.UserModel, *utils.AppError) {
+func (us *UserService) GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError) {
 	us.logger.Info("Get by id user service called...")
 
 	// call the fetch user by id repository
-	userModel, repositoryErr := us.UserRepository.GetUserById(userPayload)
+	userModel, repositoryErr := us.UserRepository.GetUserById(userParams)
 	return userModel, repositoryErr
 }
 
-func (us *UserService) DeleteUserById(userPayload *dtos.DeleteUserById) *utils.AppError {
+func (us *UserService) DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError {
 	us.logger.Info("Delete user service called...")
 
 	// call the delete user by id repository
-	repositoryErr := us.UserRepository.DeleteUserById(userPayload)
+	repositoryErr := us.UserRepository.DeleteUserById(userParams)
 	return repositoryErr
 }
 

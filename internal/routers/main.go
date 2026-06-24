@@ -9,6 +9,7 @@ import (
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/repositories"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/services"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/utils"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 )
@@ -23,16 +24,45 @@ func RegisterRouters(logger *zap.Logger, db *sql.DB, serverConfig *config.Server
 	router.Use(middleware.Logger)
 	router.Use(middlewares.RateLimiter(serverConfig))
 
-	// register health router
-	//SetupHealthRouter(router)
-
-	// register user router
+	// create all repositories
 	userRepository := repositories.NewUserRepository(logger, db, serverConfig)
-	userService := services.NewUserService(userRepository, logger, serverConfig)
-	userController := controllers.NewUserController(userService, logger, serverConfig)
-	userRouter := NewUserRouter(userController, logger, serverConfig)
+	roleRepository := repositories.NewRoleRepository(logger, db, serverConfig)
+	permissionRepository := repositories.NewPermissionRepository(logger, db, serverConfig)
 
+	userRolesRepository := repositories.NewUserRolesRepository(logger, db, serverConfig)
+	rolePermissionsRepository := repositories.NewRolePermissionsRepository(logger, db, serverConfig)
+
+	// create all services
+	userService := services.NewUserService(userRepository, logger, serverConfig)
+	roleService := services.NewRoleService(roleRepository, logger, serverConfig)
+	permissionService := services.NewPermissionService(permissionRepository, logger, serverConfig)
+
+	userRolesService := services.NewUserRolesService(userRolesRepository, userRepository, roleRepository, logger, serverConfig)
+	rolePermissionsService := services.NewRolePermissionsService(rolePermissionsRepository, roleRepository, permissionRepository, userRepository, logger, serverConfig)
+
+	// create all controllers
+	userController := controllers.NewUserController(userService, logger, serverConfig)
+	roleController := controllers.NewRoleController(roleService, logger, serverConfig)
+	permissionController := controllers.NewPermissionController(permissionService, logger, serverConfig)
+
+	userRolesController := controllers.NewUserRolesController(userRolesService, logger, serverConfig)
+	rolePermissionsController := controllers.NewRolePermissionsController(rolePermissionsService, logger, serverConfig)
+
+	// create all routers
+	userRouter := NewUserRouter(userController, userRolesController, logger, serverConfig)
+	roleRouter := NewRoleRouter(roleController, logger, serverConfig)
+	permissionRouter := NewPermissionRouter(permissionController, logger, serverConfig)
+
+	userRolesRouter := NewUserRolesRouter(userRolesController, logger, serverConfig)
+	rolePermissionsRouter := NewRolePermissionsRouter(rolePermissionsController, userRolesController, logger, serverConfig)
+
+	// register all routers
 	userRouter.Register(router)
+	roleRouter.Register(router)
+	permissionRouter.Register(router)
+
+	userRolesRouter.Register(router)
+	rolePermissionsRouter.Register(router)
 
 	// register the reverse proxy servers
 	hotelService := utils.ProxyToService("http://localhost:3000")
