@@ -24,3 +24,24 @@ type GetUserByIdParams struct {
 type DeleteUserByIdParams struct {
 	ID int `validate:"required,gte=1"`
 }
+
+type RefreshAccessTokenPayload struct {
+	Token string `json:"token" validate:"required"`
+}
+
+type LogoutUserPayload struct {
+	Token string `json:"token" validate:"required"`
+}
+
+type LogoutUserFromAllSessionsPayload struct {
+	Token string `json:"token" validate:"required"`
+}
+
+type SendOtpForVerificationPayload struct {
+	UserEmail string `json:"user_email" validate:"required"`
+}
+
+type VerifyOtpPayload struct {
+	UserEmail string `json:"user_email" validate:"required"`
+	Otp       string `json:"otp" validate:"required"`
+}
