@@ -27,7 +27,7 @@ type UserRolesController struct {
 }
 
 func (userRolesController *UserRolesController) GetRolesOfUser(resWriter http.ResponseWriter, req *http.Request) {
-	userRolesPayload := req.Context().Value("payload").(*dtos.GetRolesOfUserPayload)
+	userRolesPayload := req.Context().Value("params").(*dtos.GetRolesOfUserPayload)
 
 	// call the get user roles service
 	roleModels, serviceErr := userRolesController.UserRolesService.GetRolesOfUser(userRolesPayload)
