@@ -1,6 +1,8 @@
 package services
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"time"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
@@ -15,7 +17,7 @@ import (
 
 type UserServiceInterface interface {
 	CreateUser(userPayload *dtos.CreateUserPayload) *utils.AppError
-	LoginUser(userPayload *dtos.LoginUserPayload) (string, *utils.AppError)
+	LoginUser(userPayload *dtos.LoginUserPayload) (string, string, *utils.AppError)
 	GetAllUsers() ([]*models.UserModel, *utils.AppError)
 	GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError)
 	DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError
@@ -64,7 +66,7 @@ func (us *UserService) CreateUser(userPayload *dtos.CreateUserPayload) *utils.Ap
 	return nil
 }
 
-func (us *UserService) LoginUser(userPayload *dtos.LoginUserPayload) (string, *utils.AppError) {
+func (us *UserService) LoginUser(userPayload *dtos.LoginUserPayload) (string, string, *utils.AppError) {
 	us.logger.Info("Login user service called...")
 
 	// fetch the user by username and email repository
@@ -74,7 +76,15 @@ func (us *UserService) LoginUser(userPayload *dtos.LoginUserPayload) (string, *u
 	})
 
 	if repositoryErr != nil {
-		return "", repositoryErr
+		return "", "", repositoryErr
+	}
+
+	// check if user is verified
+	if !existingUserModel.Verified {
+		us.logger.Error("User is not verified",
+			zap.Int("user_id", existingUserModel.ID))
+
+		return "", "", utils.Forbidden("You must first verify your email address to login")
 	}
 
 	// check if passwords match
@@ -84,28 +94,58 @@ func (us *UserService) LoginUser(userPayload *dtos.LoginUserPayload) (string, *u
 		us.logger.Error("Invalid password has been provided",
 			zap.String("error", compareErr.Error()))
 
-		return "", utils.BadRequest("Invalid password has been provided")
+		return "", "", utils.BadRequest("Invalid password has been provided")
 	}
 
-	// generate the jwt token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":  existingUserModel.ID,
-		"exp": time.Now().Add(24 * time.Hour).Unix(),
+	// generate the access token
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": existingUserModel.ID,
+		"exp":     time.Now().Add(15 * time.Minute).Unix(),
 	})
 
-	tokenString, tokenErr := token.SignedString([]byte(us.serverConfig.JwtSecretKey))
+	accessTokenString, accessTokenErr := accessToken.SignedString([]byte(us.serverConfig.AccessTokenSecretKey))
 
-	if tokenErr != nil {
-		us.logger.Fatal("Something went wrong while generating the token",
-			zap.String("error", tokenErr.Error()))
+	if accessTokenErr != nil {
+		us.logger.Fatal("Something went wrong while generating the access token",
+			zap.String("error", accessTokenErr.Error()))
 
-		return "", utils.InternalServerError("Something went wrong while generating the token: " + tokenErr.Error())
+		return "", "", utils.InternalServerError("Something went wrong while generating the access token: " + accessTokenErr.Error())
+	}
+
+	// generate the refresh token
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": existingUserModel.ID,
+		"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(),
+	})
+
+	refreshTokenString, refreshTokenErr := refreshToken.SignedString([]byte(us.serverConfig.RefreshTokenSecretKey))
+
+	if refreshTokenErr != nil {
+		us.logger.Fatal("Something went wrong while generating the refresh token",
+			zap.String("error", refreshTokenErr.Error()))
+
+		return "", "", utils.InternalServerError("Something went wrong while generating the refresh token: " + refreshTokenErr.Error())
+	}
+
+	// generate the session
+	refreshTokenBytes := sha256.Sum256([]byte(refreshTokenString))
+	refreshTokenHash := hex.EncodeToString(refreshTokenBytes[:])
+
+	sessionPayload := &dtos.CreateSessionPayload{
+		UserID:           existingUserModel.ID,
+		RefreshTokenHash: refreshTokenHash,
+	}
+
+	repositoryErr = us.UserRepository.CreateSession(sessionPayload)
+
+	if repositoryErr != nil {
+		return "", "", repositoryErr
 	}
 
 	us.logger.Info("Login user service was successful",
-		zap.String("token", tokenString))
+		zap.Int("user_id", existingUserModel.ID))
 
-	return tokenString, nil
+	return accessTokenString, refreshTokenString, nil
 }
 
 func (us *UserService) GetAllUsers() ([]*models.UserModel, *utils.AppError) {

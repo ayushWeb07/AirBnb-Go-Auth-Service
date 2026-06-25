@@ -16,6 +16,7 @@ type UserRepositoryInterface interface {
 	GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError)
 	DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError
 	GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmailPayload) (*models.UserModel, *utils.AppError)
+	CreateSession(sessionPayload *dtos.CreateSessionPayload) *utils.AppError
 }
 
 type UserRepository struct {
@@ -185,6 +186,33 @@ func (ur *UserRepository) DeleteUserById(userParams *dtos.DeleteUserByIdParams) 
 
 	ur.logger.Info("Successfully deleted the user from the database",
 		zap.Int("user_id", userParams.ID))
+
+	return nil
+}
+
+func (ur *UserRepository) CreateSession(sessionPayload *dtos.CreateSessionPayload) *utils.AppError {
+	// insert into the db
+	query := "INSERT INTO sessions (user_id, refresh_token_hash) VALUES (?, ?, ?)"
+	result, queryExecErr := ur.db.Exec(query, sessionPayload.UserID, sessionPayload.RefreshTokenHash)
+
+	if queryExecErr != nil {
+		ur.logger.Error("Failed to insert session into the database",
+			zap.String("error", queryExecErr.Error()))
+
+		return utils.InternalServerError("Failed to insert session into the database: " + queryExecErr.Error())
+	}
+
+	id, insertErr := result.LastInsertId()
+
+	if insertErr != nil {
+		ur.logger.Error("Failed to insert session into the database",
+			zap.String("error", insertErr.Error()))
+
+		return utils.InternalServerError("Failed to insert session into the database: " + insertErr.Error())
+	}
+
+	ur.logger.Info("Successfully inserted session into the database",
+		zap.Int64("session_id", id))
 
 	return nil
 }

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
 	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/dtos"
@@ -60,7 +61,7 @@ func (uc *UserController) LoginUser(resWriter http.ResponseWriter, req *http.Req
 	userPayload := req.Context().Value("payload").(*dtos.LoginUserPayload)
 
 	// call the login user service
-	token, serviceErr := uc.UserService.LoginUser(userPayload)
+	accessToken, refreshToken, serviceErr := uc.UserService.LoginUser(userPayload)
 
 	if serviceErr != nil {
 		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
@@ -72,10 +73,23 @@ func (uc *UserController) LoginUser(resWriter http.ResponseWriter, req *http.Req
 		return
 	}
 
+	// store the refresh token in cookies
+	cookie := http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/",
+		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	http.SetCookie(resWriter, &cookie)
+
 	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
 		"success": true,
 		"message": "Login was successful",
-		"token":   token,
+		"token":   accessToken,
 	})
 }
 

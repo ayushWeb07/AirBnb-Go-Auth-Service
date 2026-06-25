@@ -45,3 +45,8 @@ type VerifyOtpPayload struct {
 	UserEmail string `json:"user_email" validate:"required"`
 	Otp       string `json:"otp" validate:"required"`
 }
+
+type CreateSessionPayload struct {
+	UserID           int    `json:"user_id" validate:"required,gte=1"`
+	RefreshTokenHash string `json:"refresh_token_hash" validate:"required,min=6"`
+}
