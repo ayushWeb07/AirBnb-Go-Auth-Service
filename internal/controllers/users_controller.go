@@ -23,6 +23,7 @@ type UserControllerInterface interface {
 	LoginUser(resWriter http.ResponseWriter, req *http.Request)
 	GetAllUsers(resWriter http.ResponseWriter, req *http.Request)
 	GetUserById(resWriter http.ResponseWriter, req *http.Request)
+	UpdateUserById(resWriter http.ResponseWriter, req *http.Request)
 	DeleteUserById(resWriter http.ResponseWriter, req *http.Request)
 	GetProfile(resWriter http.ResponseWriter, req *http.Request)
 	SendOtpForVerification(resWriter http.ResponseWriter, req *http.Request)
@@ -157,6 +158,29 @@ func (uc *UserController) DeleteUserById(resWriter http.ResponseWriter, req *htt
 	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
 		"success": true,
 		"message": "Successfully deleted the user",
+	})
+}
+
+func (uc *UserController) UpdateUserById(resWriter http.ResponseWriter, req *http.Request) {
+	userParams := req.Context().Value("params").(*dtos.UpdateUserByIdParams)
+	userPayload := req.Context().Value("payload").(*dtos.UpdateUserByIdPayload)
+
+	// call the update user service
+	serviceErr := uc.UserService.UpdateUserById(userParams, userPayload)
+
+	if serviceErr != nil {
+		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
+			"success": serviceErr.Success,
+			"message": "Something went wrong while updating the user",
+			"error":   serviceErr.Error(),
+		})
+
+		return
+	}
+
+	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
+		"success": true,
+		"message": "Successfully updated the user",
 	})
 }
 

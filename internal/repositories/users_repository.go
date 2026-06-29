@@ -14,11 +14,13 @@ type UserRepositoryInterface interface {
 	CreateUser(userPayload *dtos.CreateUserPayload) *utils.AppError
 	GetAllUsers() ([]*models.UserModel, *utils.AppError)
 	GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError)
+	UpdateUserById(userParams *dtos.UpdateUserByIdParams, userPayload *dtos.UpdateUserByIdPayload) *utils.AppError
 	DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError
 	GetUserByEmail(userPayload *dtos.GetUserByEmailPayload) (*models.UserModel, *utils.AppError)
 	GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmailPayload) (*models.UserModel, *utils.AppError)
 	CreateSession(sessionPayload *dtos.CreateSessionPayload) *utils.AppError
 	CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError
+	FetchOtp(otpPayload *dtos.FetchOtpRepoPayload) (*models.OtpModel, *utils.AppError)
 }
 
 type UserRepository struct {
@@ -130,6 +132,41 @@ func (ur *UserRepository) GetUserById(userParams *dtos.GetUserByIdParams) (*mode
 	)
 
 	return userModel, nil
+}
+
+func (ur *UserRepository) UpdateUserById(userParams *dtos.UpdateUserByIdParams, userPayload *dtos.UpdateUserByIdPayload) *utils.AppError {
+	// prepare and execute the query
+	query := "UPDATE users SET verified = ? WHERE id = ?"
+	result, queryExecErr := ur.db.Exec(query, userPayload.Verified, userParams.ID)
+
+	if queryExecErr != nil {
+		ur.logger.Error("Failed to update user from the database",
+			zap.String("error", queryExecErr.Error()))
+
+		return utils.InternalServerError("Failed to update user from the database: " + queryExecErr.Error())
+	}
+
+	// check if any rows got affected
+	rowsAffected, rowsErr := result.RowsAffected()
+
+	if rowsErr != nil {
+		ur.logger.Error("Failed to update user from the database",
+			zap.String("error", rowsErr.Error()))
+
+		return utils.InternalServerError("Failed to update user from the database: " + rowsErr.Error())
+	}
+
+	if rowsAffected == 0 {
+		ur.logger.Error("No user has been updated from the database",
+			zap.Int("user_id", userParams.ID))
+
+		return utils.NotFound("User with such id not found")
+	}
+
+	ur.logger.Info("Successfully updated the user from the database",
+		zap.Int("user_id", userParams.ID))
+
+	return nil
 }
 
 func (ur *UserRepository) GetUserByEmail(userPayload *dtos.GetUserByEmailPayload) (*models.UserModel, *utils.AppError) {
@@ -269,6 +306,31 @@ func (ur *UserRepository) CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *util
 		zap.Int64("otp_id", id))
 
 	return nil
+}
+
+func (ur *UserRepository) FetchOtp(otpPayload *dtos.FetchOtpRepoPayload) (*models.OtpModel, *utils.AppError) {
+	existingOtpModel := &models.OtpModel{}
+
+	// fetch from the db
+	query := "SELECT id FROM otps WHERE user_id = ? AND user_email = ? AND otp_hash = ?"
+
+	queryErr := ur.db.QueryRow(query, otpPayload.UserID, otpPayload.UserEmail, otpPayload.OtpHash).Scan(&existingOtpModel.ID)
+
+	if queryErr != nil {
+		if queryErr == sql.ErrNoRows {
+			ur.logger.Error("No such otp found in the database",
+				zap.String("error", queryErr.Error()))
+
+			return nil, utils.NotFound("No such otp found in the database")
+		}
+
+		ur.logger.Error("Failed to fetch the otp from the database",
+			zap.String("error", queryErr.Error()))
+
+		return nil, utils.InternalServerError("Failed to fetch the otp from the database: " + queryErr.Error())
+	}
+
+	return existingOtpModel, nil
 }
 
 func NewUserRepository(logger *zap.Logger, db *sql.DB, serverConfig *config.ServerConfig) UserRepositoryInterface {

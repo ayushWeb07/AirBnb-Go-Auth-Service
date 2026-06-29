@@ -20,8 +20,10 @@ type UserServiceInterface interface {
 	LoginUser(userPayload *dtos.LoginUserPayload) (string, string, *utils.AppError)
 	GetAllUsers() ([]*models.UserModel, *utils.AppError)
 	GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError)
+	UpdateUserById(userParams *dtos.UpdateUserByIdParams, userPayload *dtos.UpdateUserByIdPayload) *utils.AppError
 	DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError
 	SendOtpForVerification(otpPayload *dtos.CreateOtpServicePayload) *utils.AppError
+	VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppError
 }
 
 type UserService struct {
@@ -167,6 +169,14 @@ func (us *UserService) GetUserById(userParams *dtos.GetUserByIdParams) (*models.
 	return userModel, repositoryErr
 }
 
+func (us *UserService) UpdateUserById(userParams *dtos.UpdateUserByIdParams, userPayload *dtos.UpdateUserByIdPayload) *utils.AppError {
+	us.logger.Info("Update user service called...")
+
+	// call the update user by id repository
+	repositoryErr := us.UserRepository.UpdateUserById(userParams, userPayload)
+	return repositoryErr
+}
+
 func (us *UserService) DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError {
 	us.logger.Info("Delete user service called...")
 
@@ -221,6 +231,79 @@ func (us *UserService) SendOtpForVerification(otpPayload *dtos.CreateOtpServiceP
 
 		return repositoryErr
 	}
+
+	// render the email template
+	result, emailTemplateErr := utils.Render("otp_verification.txt", &utils.EmailData{
+		UserName: existingUserModel.Username,
+		AppName:  "Hajjme No Ippo",
+		Otp:      otpString,
+	})
+
+	if emailTemplateErr != nil {
+		us.logger.Fatal("Something went wrong while rendering the email template")
+
+		return utils.InternalServerError("Something went wrong while rendering the email template: " + emailTemplateErr.Error())
+	}
+
+	// send the email
+	emailErr := sendEmail(otpPayload.UserEmail, "Complete Your Account Verification", result)
+
+	if emailErr != nil {
+		us.logger.Fatal("Something went wrong while sending the otp verification email")
+
+		return utils.InternalServerError("Something went wrong while sending the otp verification email: " + emailErr.Error())
+	}
+
+	us.logger.Info("Sending otp for verification was successful")
+
+	return nil
+}
+
+func (us *UserService) VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppError {
+	us.logger.Info("Verify otp service called...")
+
+	// fetch the user by email repository
+	existingUserModel, repositoryErr := us.UserRepository.GetUserByEmail(&dtos.GetUserByEmailPayload{
+		Email: otpPayload.UserEmail,
+	})
+
+	if repositoryErr != nil {
+		return repositoryErr
+	}
+
+	// check if user is verified
+	if existingUserModel.Verified {
+		us.logger.Error("User is already verified",
+			zap.Int("user_id", existingUserModel.ID))
+
+		return utils.Forbidden("Your email address is already verified")
+	}
+
+	// hash the user sent otp
+	otpBytes := sha256.Sum256([]byte(otpPayload.Otp))
+	otpHash := hex.EncodeToString(otpBytes[:])
+
+	// find the otp in the db
+	otpRepoPayload := &dtos.FetchOtpRepoPayload{
+		UserID:    existingUserModel.ID,
+		UserEmail: existingUserModel.Email,
+		OtpHash:   otpHash,
+	}
+
+	existingOtpModel, repositoryErr := us.UserRepository.FetchOtp(otpRepoPayload)
+
+	if repositoryErr != nil {
+		return repositoryErr
+	}
+
+	// update user status to verified
+	//user.verified = true;
+	//await user.save();
+
+	// delete all the otps for the user
+	await otpModel.deleteMany({
+	userId: user._id,
+	});
 
 	// render the email template
 	result, emailTemplateErr := utils.Render("otp_verification.txt", &utils.EmailData{
