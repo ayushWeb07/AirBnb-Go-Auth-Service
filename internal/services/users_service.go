@@ -290,44 +290,39 @@ func (us *UserService) VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppEr
 		OtpHash:   otpHash,
 	}
 
-	existingOtpModel, repositoryErr := us.UserRepository.FetchOtp(otpRepoPayload)
+	_, repositoryErr = us.UserRepository.FetchOtp(otpRepoPayload)
 
 	if repositoryErr != nil {
 		return repositoryErr
 	}
 
 	// update user status to verified
-	//user.verified = true;
-	//await user.save();
+	userParams := &dtos.UpdateUserByIdParams{
+		ID: existingUserModel.ID,
+	}
+
+	userPayload := &dtos.UpdateUserByIdPayload{
+		Verified: true,
+	}
+
+	repositoryErr = us.UserRepository.UpdateUserById(userParams, userPayload)
+
+	if repositoryErr != nil {
+		return repositoryErr
+	}
 
 	// delete all the otps for the user
-	await otpModel.deleteMany({
-	userId: user._id,
-	});
-
-	// render the email template
-	result, emailTemplateErr := utils.Render("otp_verification.txt", &utils.EmailData{
-		UserName: existingUserModel.Username,
-		AppName:  "Hajjme No Ippo",
-		Otp:      otpString,
-	})
-
-	if emailTemplateErr != nil {
-		us.logger.Fatal("Something went wrong while rendering the email template")
-
-		return utils.InternalServerError("Something went wrong while rendering the email template: " + emailTemplateErr.Error())
+	deleteOtpsPayload := &dtos.DeleteOtpsRepoPayload{
+		UserID: existingUserModel.ID,
 	}
 
-	// send the email
-	emailErr := sendEmail(otpPayload.UserEmail, "Complete Your Account Verification", result)
+	repositoryErr = us.UserRepository.DeleteOtps(deleteOtpsPayload)
 
-	if emailErr != nil {
-		us.logger.Fatal("Something went wrong while sending the otp verification email")
-
-		return utils.InternalServerError("Something went wrong while sending the otp verification email: " + emailErr.Error())
+	if repositoryErr != nil {
+		return repositoryErr
 	}
 
-	us.logger.Info("Sending otp for verification was successful")
+	us.logger.Info("User verification was successful")
 
 	return nil
 }

@@ -75,6 +75,8 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 		)).With(middlewares.DecodeAndValidateRequestBody[dtos.UpdateUserByIdPayload]).Put("/{id}", ur.UserController.UpdateUserById)
 
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CreateOtpServicePayload]).Post("/send-otp-for-verification", ur.UserController.SendOtpForVerification)
+
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.VerifyOtpPayload]).Post("/verify-otp", ur.UserController.VerifyOtp)
 	})
 }
 

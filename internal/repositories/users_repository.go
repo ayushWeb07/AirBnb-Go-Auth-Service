@@ -21,6 +21,7 @@ type UserRepositoryInterface interface {
 	CreateSession(sessionPayload *dtos.CreateSessionPayload) *utils.AppError
 	CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError
 	FetchOtp(otpPayload *dtos.FetchOtpRepoPayload) (*models.OtpModel, *utils.AppError)
+	DeleteOtps(otpPayload *dtos.DeleteOtpsRepoPayload) *utils.AppError
 }
 
 type UserRepository struct {
@@ -331,6 +332,40 @@ func (ur *UserRepository) FetchOtp(otpPayload *dtos.FetchOtpRepoPayload) (*model
 	}
 
 	return existingOtpModel, nil
+}
+
+func (ur *UserRepository) DeleteOtps(otpPayload *dtos.DeleteOtpsRepoPayload) *utils.AppError {
+	// prepare and execute the query
+	query := "DELETE FROM otps WHERE user_id = ?"
+	result, queryExecErr := ur.db.Exec(query, otpPayload.UserID)
+
+	if queryExecErr != nil {
+		ur.logger.Error("Failed to delete otps from the database",
+			zap.String("error", queryExecErr.Error()))
+
+		return utils.InternalServerError("Failed to delete otps from the database: " + queryExecErr.Error())
+	}
+
+	// check if any rows got affected
+	rowsAffected, rowsErr := result.RowsAffected()
+
+	if rowsErr != nil {
+		ur.logger.Error("Failed to delete otps from the database",
+			zap.String("error", rowsErr.Error()))
+
+		return utils.InternalServerError("Failed to delete otps from the database: " + rowsErr.Error())
+	}
+
+	if rowsAffected == 0 {
+		ur.logger.Error("No otp has been deleted from the database")
+
+		return utils.NotFound("No otps associated with such user")
+	}
+
+	ur.logger.Info("Successfully deleted the otps from the database",
+		zap.Int("user_id", otpPayload.UserID))
+
+	return nil
 }
 
 func NewUserRepository(logger *zap.Logger, db *sql.DB, serverConfig *config.ServerConfig) UserRepositoryInterface {

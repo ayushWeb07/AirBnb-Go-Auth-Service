@@ -78,3 +78,7 @@ type FetchOtpRepoPayload struct {
 	UserEmail string `json:"user_email" validate:"required,email,min=6,max=100"`
 	OtpHash   string `json:"otp_hash" validate:"required,min=6"`
 }
+
+type DeleteOtpsRepoPayload struct {
+	UserID int `json:"user_id" validate:"required,gte=1"`
+}
