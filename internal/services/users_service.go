@@ -222,8 +222,21 @@ func (us *UserService) SendOtpForVerification(otpPayload *dtos.CreateOtpServiceP
 		return repositoryErr
 	}
 
+	// render the email template
+	result, emailTemplateErr := utils.Render("otp_verification.txt", &utils.EmailData{
+		UserName: existingUserModel.Username,
+		AppName:  "Hajjme No Ippo",
+		Otp:      otpString,
+	})
+
+	if emailTemplateErr != nil {
+		us.logger.Fatal("Something went wrong while rendering the email template")
+
+		return utils.InternalServerError("Something went wrong while rendering the email template: " + emailTemplateErr.Error())
+	}
+
 	// send the email
-	emailErr := sendEmail(otpPayload.UserEmail, "Complete Your Account Verification", "Hi there!!!")
+	emailErr := sendEmail(otpPayload.UserEmail, "Complete Your Account Verification", result)
 
 	if emailErr != nil {
 		us.logger.Fatal("Something went wrong while sending the otp verification email")
