@@ -62,7 +62,7 @@ func (ur *UserRepository) GetAllUsers() ([]*models.UserModel, *utils.AppError) {
 	var userModels []*models.UserModel
 
 	// load the rows
-	query := "SELECT id, username, email FROM users"
+	query := "SELECT id, username, email, verified, created_at, updated_at FROM users"
 	rows, queryErr := ur.db.Query(query)
 
 	if queryErr != nil {
@@ -78,7 +78,7 @@ func (ur *UserRepository) GetAllUsers() ([]*models.UserModel, *utils.AppError) {
 	for rows.Next() {
 		userModel := &models.UserModel{}
 
-		rowScanErr := rows.Scan(&userModel.ID, &userModel.Username, &userModel.Email)
+		rowScanErr := rows.Scan(&userModel.ID, &userModel.Username, &userModel.Email, &userModel.Verified, &userModel.CreatedAt, &userModel.UpdatedAt)
 
 		if rowScanErr != nil {
 			ur.logger.Error("Failed to fetch all the users from the database",
@@ -110,9 +110,9 @@ func (ur *UserRepository) GetUserById(userParams *dtos.GetUserByIdParams) (*mode
 	userModel := &models.UserModel{}
 
 	// fetch from the db
-	query := "SELECT id, username, email, created_at, updated_at FROM users WHERE id = ?"
+	query := "SELECT id, username, email, verified, created_at, updated_at FROM users WHERE id = ?"
 
-	queryErr := ur.db.QueryRow(query, userParams.ID).Scan(&userModel.ID, &userModel.Username, &userModel.Email, &userModel.CreatedAt, &userModel.UpdatedAt)
+	queryErr := ur.db.QueryRow(query, userParams.ID).Scan(&userModel.ID, &userModel.Username, &userModel.Email, &userModel.Verified, &userModel.CreatedAt, &userModel.UpdatedAt)
 
 	if queryErr != nil {
 		if queryErr == sql.ErrNoRows {
@@ -174,9 +174,9 @@ func (ur *UserRepository) GetUserByEmail(userPayload *dtos.GetUserByEmailPayload
 	existingUserModel := &models.UserModel{}
 
 	// fetch from the db
-	query := "SELECT id, username, email, password FROM users WHERE email = ?"
+	query := "SELECT id, username, email, password, verified, created_at, updated_at FROM users WHERE email = ?"
 
-	queryErr := ur.db.QueryRow(query, userPayload.Email).Scan(&existingUserModel.ID, &existingUserModel.Username, &existingUserModel.Email, &existingUserModel.Password)
+	queryErr := ur.db.QueryRow(query, userPayload.Email).Scan(&existingUserModel.ID, &existingUserModel.Username, &existingUserModel.Email, &existingUserModel.Password, &existingUserModel.Verified, &existingUserModel.CreatedAt, &existingUserModel.UpdatedAt)
 
 	if queryErr != nil {
 		if queryErr == sql.ErrNoRows {
@@ -199,9 +199,9 @@ func (ur *UserRepository) GetUserByUsernameAndEmail(userPayload *dtos.GetUserByU
 	existingUserModel := &models.UserModel{}
 
 	// fetch from the db
-	query := "SELECT id, username, email, password FROM users WHERE username = ? AND email = ?"
+	query := "SELECT id, username, email, password, verified, created_at, updated_at FROM users WHERE username = ? AND email = ?"
 
-	queryErr := ur.db.QueryRow(query, userPayload.Username, userPayload.Email).Scan(&existingUserModel.ID, &existingUserModel.Username, &existingUserModel.Email, &existingUserModel.Password)
+	queryErr := ur.db.QueryRow(query, userPayload.Username, userPayload.Email).Scan(&existingUserModel.ID, &existingUserModel.Username, &existingUserModel.Email, &existingUserModel.Password, &existingUserModel.Verified, &existingUserModel.CreatedAt, &existingUserModel.UpdatedAt)
 
 	if queryErr != nil {
 		if queryErr == sql.ErrNoRows {
