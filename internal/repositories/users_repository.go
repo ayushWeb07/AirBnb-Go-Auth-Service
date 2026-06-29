@@ -15,8 +15,10 @@ type UserRepositoryInterface interface {
 	GetAllUsers() ([]*models.UserModel, *utils.AppError)
 	GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError)
 	DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError
+	GetUserByEmail(userPayload *dtos.GetUserByEmailPayload) (*models.UserModel, *utils.AppError)
 	GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmailPayload) (*models.UserModel, *utils.AppError)
 	CreateSession(sessionPayload *dtos.CreateSessionPayload) *utils.AppError
+	CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError
 }
 
 type UserRepository struct {
@@ -130,6 +132,31 @@ func (ur *UserRepository) GetUserById(userParams *dtos.GetUserByIdParams) (*mode
 	return userModel, nil
 }
 
+func (ur *UserRepository) GetUserByEmail(userPayload *dtos.GetUserByEmailPayload) (*models.UserModel, *utils.AppError) {
+	existingUserModel := &models.UserModel{}
+
+	// fetch from the db
+	query := "SELECT id, username, email, password FROM users WHERE email = ?"
+
+	queryErr := ur.db.QueryRow(query, userPayload.Email).Scan(&existingUserModel.ID, &existingUserModel.Username, &existingUserModel.Email, &existingUserModel.Password)
+
+	if queryErr != nil {
+		if queryErr == sql.ErrNoRows {
+			ur.logger.Error("No such user found in the database",
+				zap.String("error", queryErr.Error()))
+
+			return nil, utils.NotFound("No such user found in the database")
+		}
+
+		ur.logger.Error("Failed to fetch the user from the database",
+			zap.String("error", queryErr.Error()))
+
+		return nil, utils.InternalServerError("Failed to fetch the user from the database: " + queryErr.Error())
+	}
+
+	return existingUserModel, nil
+}
+
 func (ur *UserRepository) GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmailPayload) (*models.UserModel, *utils.AppError) {
 	existingUserModel := &models.UserModel{}
 
@@ -213,6 +240,33 @@ func (ur *UserRepository) CreateSession(sessionPayload *dtos.CreateSessionPayloa
 
 	ur.logger.Info("Successfully inserted session into the database",
 		zap.Int64("session_id", id))
+
+	return nil
+}
+
+func (ur *UserRepository) CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError {
+	// insert into the db
+	query := "INSERT INTO otps (user_id, user_email, otp_hash) VALUES (?, ?, ?)"
+	result, queryExecErr := ur.db.Exec(query, otpPayload.UserID, otpPayload.UserEmail, otpPayload.OtpHash)
+
+	if queryExecErr != nil {
+		ur.logger.Error("Failed to insert otp into the database",
+			zap.String("error", queryExecErr.Error()))
+
+		return utils.InternalServerError("Failed to insert otp into the database: " + queryExecErr.Error())
+	}
+
+	id, insertErr := result.LastInsertId()
+
+	if insertErr != nil {
+		ur.logger.Error("Failed to insert otp into the database",
+			zap.String("error", insertErr.Error()))
+
+		return utils.InternalServerError("Failed to insert otp into the database: " + insertErr.Error())
+	}
+
+	ur.logger.Info("Successfully inserted otp into the database",
+		zap.Int64("otp_id", id))
 
 	return nil
 }

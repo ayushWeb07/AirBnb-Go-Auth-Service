@@ -21,6 +21,7 @@ type UserServiceInterface interface {
 	GetAllUsers() ([]*models.UserModel, *utils.AppError)
 	GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError)
 	DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError
+	SendOtpForVerification(otpPayload *dtos.CreateOtpServicePayload) *utils.AppError
 }
 
 type UserService struct {
@@ -139,6 +140,8 @@ func (us *UserService) LoginUser(userPayload *dtos.LoginUserPayload) (string, st
 	repositoryErr = us.UserRepository.CreateSession(sessionPayload)
 
 	if repositoryErr != nil {
+		us.logger.Fatal("Something went wrong while generating the session")
+
 		return "", "", repositoryErr
 	}
 
@@ -170,6 +173,67 @@ func (us *UserService) DeleteUserById(userParams *dtos.DeleteUserByIdParams) *ut
 	// call the delete user by id repository
 	repositoryErr := us.UserRepository.DeleteUserById(userParams)
 	return repositoryErr
+}
+
+func (us *UserService) SendOtpForVerification(otpPayload *dtos.CreateOtpServicePayload) *utils.AppError {
+	us.logger.Info("Send otp for verification service called...")
+
+	// fetch the user by email repository
+	existingUserModel, repositoryErr := us.UserRepository.GetUserByEmail(&dtos.GetUserByEmailPayload{
+		Email: otpPayload.UserEmail,
+	})
+
+	if repositoryErr != nil {
+		return repositoryErr
+	}
+
+	// check if user is verified
+	if existingUserModel.Verified {
+		us.logger.Error("User is already verified",
+			zap.Int("user_id", existingUserModel.ID))
+
+		return utils.Forbidden("Your email address is already verified")
+	}
+
+	// generate otp and hash
+	otpString, err := utils.GenerateRandomOtp(10)
+
+	if err != nil {
+		us.logger.Error("Something went wrong while generating otp")
+
+		return utils.InternalServerError("Something went wrong while generating otp: " + err.Error())
+	}
+
+	otpBytes := sha256.Sum256([]byte(otpString))
+	otpHash := hex.EncodeToString(otpBytes[:])
+
+	// insert otp into db
+	otpRepoPayload := &dtos.CreateOtpRepoPayload{
+		UserID:    existingUserModel.ID,
+		UserEmail: existingUserModel.Email,
+		OtpHash:   otpHash,
+	}
+
+	repositoryErr = us.UserRepository.CreateOtp(otpRepoPayload)
+
+	if repositoryErr != nil {
+		us.logger.Fatal("Something went wrong while generating the otp")
+
+		return repositoryErr
+	}
+
+	// send the email
+	emailErr := sendEmail(otpPayload.UserEmail, "Complete Your Account Verification", "Hi there!!!")
+
+	if emailErr != nil {
+		us.logger.Fatal("Something went wrong while sending the otp verification email")
+
+		return utils.InternalServerError("Something went wrong while sending the otp verification email: " + emailErr.Error())
+	}
+
+	us.logger.Info("Sending otp for verification was successful")
+
+	return nil
 }
 
 func NewUserService(repo repositories.UserRepositoryInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserServiceInterface {

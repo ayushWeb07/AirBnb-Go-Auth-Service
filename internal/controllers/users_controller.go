@@ -25,6 +25,7 @@ type UserControllerInterface interface {
 	GetUserById(resWriter http.ResponseWriter, req *http.Request)
 	DeleteUserById(resWriter http.ResponseWriter, req *http.Request)
 	GetProfile(resWriter http.ResponseWriter, req *http.Request)
+	SendOtpForVerification(resWriter http.ResponseWriter, req *http.Request)
 }
 
 type UserController struct {
@@ -179,6 +180,29 @@ func (uc *UserController) GetProfile(resWriter http.ResponseWriter, req *http.Re
 		"success": true,
 		"message": "Successfully fetched the profile",
 		"user":    userModel,
+	})
+}
+
+func (uc *UserController) SendOtpForVerification(resWriter http.ResponseWriter, req *http.Request) {
+	userPayload := req.Context().Value("payload").(*dtos.CreateOtpServicePayload)
+
+	// call the create user service
+	serviceErr := uc.UserService.SendOtpForVerification(userPayload)
+
+	if serviceErr != nil {
+		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
+			"success": serviceErr.Success,
+			"message": "Something went wrong while sending otp for verification",
+			"error":   serviceErr.Error(),
+		})
+
+		return
+	}
+
+	utils.WriteJsonResponse(http.StatusCreated, resWriter, map[string]any{
+		"success": true,
+		"message": "Successfully sent the otp for verification",
+		"email":   userPayload.UserEmail,
 	})
 }
 

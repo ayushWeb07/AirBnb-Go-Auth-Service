@@ -59,6 +59,8 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 				}, nil
 			},
 		)).Delete("/{id}", ur.UserController.DeleteUserById)
+
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CreateOtpServicePayload]).Post("/send-otp-for-verification", ur.UserController.SendOtpForVerification)
 	})
 }
 

@@ -6,6 +6,10 @@ type CreateUserPayload struct {
 	Password string `json:"password" validate:"required,min=8,max=100"`
 }
 
+type GetUserByEmailPayload struct {
+	Email string `json:"email" validate:"required,email,min=6,max=100"`
+}
+
 type GetUserByUsernameAndEmailPayload struct {
 	Username string `json:"username" validate:"required,min=6,max=100"`
 	Email    string `json:"email" validate:"required,email,min=6,max=100"`
@@ -49,4 +53,14 @@ type VerifyOtpPayload struct {
 type CreateSessionPayload struct {
 	UserID           int    `json:"user_id" validate:"required,gte=1"`
 	RefreshTokenHash string `json:"refresh_token_hash" validate:"required,min=6"`
+}
+
+type CreateOtpServicePayload struct {
+	UserEmail string `json:"user_email" validate:"required,email,min=6,max=100"`
+}
+
+type CreateOtpRepoPayload struct {
+	UserID    int    `json:"user_id" validate:"required,gte=1"`
+	UserEmail string `json:"user_email" validate:"required,email,min=6,max=100"`
+	OtpHash   string `json:"otp_hash" validate:"required,min=6"`
 }
