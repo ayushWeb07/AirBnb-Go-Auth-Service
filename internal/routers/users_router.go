@@ -78,7 +78,9 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 
 		r.With(middlewares.DecodeAndValidateRequestBody[dtos.VerifyOtpPayload]).Post("/verify-otp", ur.UserController.VerifyOtp)
 
-		r.Post("/refresh-access-token", ur.UserController.VerifyOtp)
+		r.Post("/refresh-access-token", ur.UserController.RefreshAccessToken)
+
+		r.Post("/logout", ur.UserController.LogoutUser)
 	})
 }
 

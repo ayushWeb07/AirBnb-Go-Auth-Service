@@ -20,6 +20,7 @@ type UserRepositoryInterface interface {
 	GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmailPayload) (*models.UserModel, *utils.AppError)
 	CreateSession(sessionPayload *dtos.CreateSessionPayload) *utils.AppError
 	FetchSession(sessionPayload *dtos.FetchSessionPayload) (*models.SessionModel, *utils.AppError)
+	UpdateSessionById(sessionParams *dtos.UpdateSessionByIdParams, sessionPayload *dtos.UpdateSessionByIdPayload) *utils.AppError
 	CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError
 	FetchOtp(otpPayload *dtos.FetchOtpRepoPayload) (*models.OtpModel, *utils.AppError)
 	DeleteOtps(otpPayload *dtos.DeleteOtpsRepoPayload) *utils.AppError
@@ -310,6 +311,41 @@ func (ur *UserRepository) FetchSession(sessionPayload *dtos.FetchSessionPayload)
 	)
 
 	return sessionModel, nil
+}
+
+func (ur *UserRepository) UpdateSessionById(sessionParams *dtos.UpdateSessionByIdParams, sessionPayload *dtos.UpdateSessionByIdPayload) *utils.AppError {
+	// prepare and execute the query
+	query := "UPDATE sessions SET revoked = ? WHERE id = ?"
+	result, queryExecErr := ur.db.Exec(query, sessionPayload.Revoked, sessionParams.ID)
+
+	if queryExecErr != nil {
+		ur.logger.Error("Failed to update session from the database",
+			zap.String("error", queryExecErr.Error()))
+
+		return utils.InternalServerError("Failed to update session from the database: " + queryExecErr.Error())
+	}
+
+	// check if any rows got affected
+	rowsAffected, rowsErr := result.RowsAffected()
+
+	if rowsErr != nil {
+		ur.logger.Error("Failed to update session from the database",
+			zap.String("error", rowsErr.Error()))
+
+		return utils.InternalServerError("Failed to update session from the database: " + rowsErr.Error())
+	}
+
+	if rowsAffected == 0 {
+		ur.logger.Error("No session has been updated from the database",
+			zap.Int("session_id", sessionParams.ID))
+
+		return utils.NotFound("Session with such id not found")
+	}
+
+	ur.logger.Info("Successfully updated the session from the database",
+		zap.Int("session_id", sessionParams.ID))
+
+	return nil
 }
 
 func (ur *UserRepository) CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError {

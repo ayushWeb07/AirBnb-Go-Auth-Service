@@ -30,6 +30,7 @@ type UserControllerInterface interface {
 	SendOtpForVerification(resWriter http.ResponseWriter, req *http.Request)
 	VerifyOtp(resWriter http.ResponseWriter, req *http.Request)
 	RefreshAccessToken(resWriter http.ResponseWriter, req *http.Request)
+	LogoutUser(resWriter http.ResponseWriter, req *http.Request)
 }
 
 type UserController struct {
@@ -303,6 +304,66 @@ func (uc *UserController) RefreshAccessToken(resWriter http.ResponseWriter, req 
 		"token":   accessToken,
 	})
 
+}
+
+func (uc *UserController) LogoutUser(resWriter http.ResponseWriter, req *http.Request) {
+
+	// Retrieve the cookie
+	cookie, err := req.Cookie("refresh_token")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			utils.WriteJsonResponse(http.StatusNotFound, resWriter, map[string]any{
+				"success": false,
+				"message": "Cookie not found",
+				"error":   err.Error(),
+			})
+
+			return
+		}
+
+		utils.WriteJsonResponse(http.StatusInternalServerError, resWriter, map[string]any{
+			"success": false,
+			"message": "Something went wrong while retrieving cookie",
+			"error":   err.Error(),
+		})
+
+		return
+	}
+
+	// call the logout service
+	tokenPayload := &dtos.LogoutUserPayload{
+		RefreshToken: cookie.Value,
+	}
+
+	serviceErr := uc.UserService.LogoutUser(tokenPayload)
+
+	if serviceErr != nil {
+		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
+			"success": serviceErr.Success,
+			"message": "Something went wrong while logging out",
+			"error":   serviceErr.Error(),
+		})
+
+		return
+	}
+
+	// clear cookie to remove refresh token
+	cookie = &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	http.SetCookie(resWriter, cookie)
+
+	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
+		"success": true,
+		"message": "You have been successfully logged out",
+	})
 }
 
 func NewUserController(service services.UserServiceInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserControllerInterface {

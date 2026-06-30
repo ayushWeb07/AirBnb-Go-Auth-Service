@@ -25,6 +25,7 @@ type UserServiceInterface interface {
 	SendOtpForVerification(otpPayload *dtos.CreateOtpServicePayload) *utils.AppError
 	VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppError
 	RefreshAccessToken(tokenPayload *dtos.RefreshAccessTokenPayload) (string, *utils.AppError)
+	LogoutUser(tokenPayload *dtos.LogoutUserPayload) *utils.AppError
 }
 
 type UserService struct {
@@ -344,17 +345,17 @@ func (us *UserService) RefreshAccessToken(tokenPayload *dtos.RefreshAccessTokenP
 
 	// check if there's an error or the token is invalid
 	if err != nil {
-		us.logger.Fatal("Invalid token has been provided while generating the refresh token",
+		us.logger.Fatal("Invalid token has been provided while refreshing access token",
 			zap.String("error", err.Error()))
 
-		return "", utils.Unauthorized("Invalid token has been provided while generating the refresh token:  " + err.Error())
+		return "", utils.Unauthorized("Invalid token has been provided while refreshing access token:  " + err.Error())
 	}
 
 	if !token.Valid {
-		us.logger.Fatal("Invalid or expired token has been provided while generating the refresh token",
+		us.logger.Fatal("Invalid or expired token has been provided while refreshing access token",
 			zap.String("error", err.Error()))
 
-		return "", utils.Unauthorized("Invalid or expired token has been provided while generating the refresh token:  " + err.Error())
+		return "", utils.Unauthorized("Invalid or expired token has been provided while refreshing access token:  " + err.Error())
 	}
 
 	// parse token to decode the payload
@@ -428,6 +429,111 @@ func (us *UserService) RefreshAccessToken(tokenPayload *dtos.RefreshAccessTokenP
 	}
 
 	return accessTokenString, nil
+}
+
+func (us *UserService) LogoutUser(tokenPayload *dtos.LogoutUserPayload) *utils.AppError {
+	// verify the refresh token
+	token, err := jwt.Parse(tokenPayload.RefreshToken, func(token *jwt.Token) (any, error) {
+		// invalid signing method had been used for token generating
+		if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
+			us.logger.Error("Invalid signing method had been used while logging out")
+
+			return utils.BadRequest("Invalid signing method had been used"), nil
+		}
+
+		// else return the jwt secret key
+		return []byte(us.serverConfig.RefreshTokenSecretKey), nil
+	})
+
+	// check if there's an error or the token is invalid
+	if err != nil {
+		us.logger.Fatal("Invalid token has been provided while logging out",
+			zap.String("error", err.Error()))
+
+		return utils.Unauthorized("Invalid token has been provided while logging out:  " + err.Error())
+	}
+
+	if !token.Valid {
+		us.logger.Fatal("Invalid or expired token has been provided while logging out",
+			zap.String("error", err.Error()))
+
+		return utils.Unauthorized("Invalid or expired token has been provided while generating the refresh token:  " + err.Error())
+	}
+
+	// parse token to decode the payload
+	claims, ok := token.Claims.(jwt.MapClaims)
+
+	if !ok {
+		us.logger.Fatal("Failed to decode payload from an invalid token")
+
+		return utils.Unauthorized("Failed to decode payload from an invalid token")
+	}
+
+	// access the payload
+	userId := claims["user_id"].(float64)
+	expiryTime := claims["exp"].(float64)
+
+	// check if token has expired
+	if time.Now().Unix() > int64(expiryTime) {
+		us.logger.Fatal("Token has expired. Please login again")
+
+		return utils.Unauthorized("Token has expired. Please login again")
+	}
+
+	// fetch the user
+	getUserPayload := &dtos.GetUserByIdParams{
+		ID: int(userId),
+	}
+
+	existingUserModel, repositoryErr := us.UserRepository.GetUserById(getUserPayload)
+
+	if repositoryErr != nil {
+		return repositoryErr
+	}
+
+	// check if user is verified
+	if !existingUserModel.Verified {
+		us.logger.Error("User is not verified",
+			zap.Int("user_id", existingUserModel.ID))
+
+		return utils.Forbidden("You must first verify your email address to login")
+	}
+
+	// fetch the session
+	refreshTokenBytes := sha256.Sum256([]byte(tokenPayload.RefreshToken))
+	refreshTokenHash := hex.EncodeToString(refreshTokenBytes[:])
+
+	sessionPayload := &dtos.FetchSessionPayload{
+		UserID:           existingUserModel.ID,
+		RefreshTokenHash: refreshTokenHash,
+		Revoked:          false,
+	}
+
+	existingSessionModel, repositoryErr := us.UserRepository.FetchSession(sessionPayload)
+
+	if repositoryErr != nil {
+		return repositoryErr
+	}
+
+	// revoke the session
+	updateSessionParams := &dtos.UpdateSessionByIdParams{
+		ID: existingSessionModel.ID,
+	}
+
+	updateSessionPayload := &dtos.UpdateSessionByIdPayload{
+		Revoked: true,
+	}
+
+	repositoryErr = us.UserRepository.UpdateSessionById(updateSessionParams, updateSessionPayload)
+
+	if repositoryErr != nil {
+		return repositoryErr
+	}
+
+	us.logger.Info("Logout user service was successful",
+		zap.Int("user_id", existingUserModel.ID))
+
+	return nil
 }
 
 func NewUserService(repo repositories.UserRepositoryInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserServiceInterface {
