@@ -257,7 +257,7 @@ func (ur *UserRepository) DeleteUserById(userParams *dtos.DeleteUserByIdParams) 
 
 func (ur *UserRepository) CreateSession(sessionPayload *dtos.CreateSessionPayload) *utils.AppError {
 	// insert into the db
-	query := "INSERT INTO sessions (user_id, refresh_token_hash) VALUES (?, ?, ?)"
+	query := "INSERT INTO sessions (user_id, refresh_token_hash) VALUES (?, ?)"
 	result, queryExecErr := ur.db.Exec(query, sessionPayload.UserID, sessionPayload.RefreshTokenHash)
 
 	if queryExecErr != nil {
