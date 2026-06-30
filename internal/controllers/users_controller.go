@@ -265,7 +265,7 @@ func (uc *UserController) RefreshAccessToken(resWriter http.ResponseWriter, req 
 		if errors.Is(err, http.ErrNoCookie) {
 			utils.WriteJsonResponse(http.StatusNotFound, resWriter, map[string]any{
 				"success": false,
-				"message": "Cookie not found",
+				"message": "Missing tokens, please login",
 				"error":   err.Error(),
 			})
 
@@ -274,7 +274,7 @@ func (uc *UserController) RefreshAccessToken(resWriter http.ResponseWriter, req 
 
 		utils.WriteJsonResponse(http.StatusInternalServerError, resWriter, map[string]any{
 			"success": false,
-			"message": "Something went wrong while retrieving cookie",
+			"message": "Something went wrong while retrieving tokens",
 			"error":   err.Error(),
 		})
 
@@ -314,7 +314,7 @@ func (uc *UserController) LogoutUser(resWriter http.ResponseWriter, req *http.Re
 		if errors.Is(err, http.ErrNoCookie) {
 			utils.WriteJsonResponse(http.StatusNotFound, resWriter, map[string]any{
 				"success": false,
-				"message": "Cookie not found",
+				"message": "Missing tokens, please login",
 				"error":   err.Error(),
 			})
 
@@ -323,7 +323,7 @@ func (uc *UserController) LogoutUser(resWriter http.ResponseWriter, req *http.Re
 
 		utils.WriteJsonResponse(http.StatusInternalServerError, resWriter, map[string]any{
 			"success": false,
-			"message": "Something went wrong while retrieving cookie",
+			"message": "Something went wrong while retrieving tokens",
 			"error":   err.Error(),
 		})
 
