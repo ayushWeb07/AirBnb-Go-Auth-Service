@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -28,6 +29,7 @@ type UserControllerInterface interface {
 	GetProfile(resWriter http.ResponseWriter, req *http.Request)
 	SendOtpForVerification(resWriter http.ResponseWriter, req *http.Request)
 	VerifyOtp(resWriter http.ResponseWriter, req *http.Request)
+	RefreshAccessToken(resWriter http.ResponseWriter, req *http.Request)
 }
 
 type UserController struct {
@@ -252,6 +254,55 @@ func (uc *UserController) VerifyOtp(resWriter http.ResponseWriter, req *http.Req
 		"message": "Successfully verified the user by otp",
 		"email":   userPayload.UserEmail,
 	})
+}
+
+func (uc *UserController) RefreshAccessToken(resWriter http.ResponseWriter, req *http.Request) {
+
+	// Retrieve the cookie
+	cookie, err := req.Cookie("refresh_token")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			utils.WriteJsonResponse(http.StatusNotFound, resWriter, map[string]any{
+				"success": false,
+				"message": "Cookie not found",
+				"error":   err.Error(),
+			})
+
+			return
+		}
+
+		utils.WriteJsonResponse(http.StatusInternalServerError, resWriter, map[string]any{
+			"success": false,
+			"message": "Something went wrong while retrieving cookie",
+			"error":   err.Error(),
+		})
+
+		return
+	}
+
+	// call the refresh access token service
+	tokenPayload := &dtos.RefreshAccessTokenPayload{
+		RefreshToken: cookie.Value,
+	}
+
+	accessToken, serviceErr := uc.UserService.RefreshAccessToken(tokenPayload)
+
+	if serviceErr != nil {
+		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
+			"success": serviceErr.Success,
+			"message": "Something went wrong while refreshing access token",
+			"error":   serviceErr.Error(),
+		})
+
+		return
+	}
+
+	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
+		"success": true,
+		"message": "Refreshing access token was successful",
+		"token":   accessToken,
+	})
+
 }
 
 func NewUserController(service services.UserServiceInterface, logger *zap.Logger, serverConfig *config.ServerConfig) UserControllerInterface {

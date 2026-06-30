@@ -19,6 +19,7 @@ type UserRepositoryInterface interface {
 	GetUserByEmail(userPayload *dtos.GetUserByEmailPayload) (*models.UserModel, *utils.AppError)
 	GetUserByUsernameAndEmail(userPayload *dtos.GetUserByUsernameAndEmailPayload) (*models.UserModel, *utils.AppError)
 	CreateSession(sessionPayload *dtos.CreateSessionPayload) *utils.AppError
+	FetchSession(sessionPayload *dtos.FetchSessionPayload) (*models.SessionModel, *utils.AppError)
 	CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError
 	FetchOtp(otpPayload *dtos.FetchOtpRepoPayload) (*models.OtpModel, *utils.AppError)
 	DeleteOtps(otpPayload *dtos.DeleteOtpsRepoPayload) *utils.AppError
@@ -280,6 +281,35 @@ func (ur *UserRepository) CreateSession(sessionPayload *dtos.CreateSessionPayloa
 		zap.Int64("session_id", id))
 
 	return nil
+}
+
+func (ur *UserRepository) FetchSession(sessionPayload *dtos.FetchSessionPayload) (*models.SessionModel, *utils.AppError) {
+	// create the dummy instance
+	sessionModel := &models.SessionModel{}
+
+	// fetch from the db
+	query := "SELECT id FROM sessions WHERE refresh_token_hash = ? AND user_id = ? AND revoked = ?"
+
+	queryErr := ur.db.QueryRow(query, sessionPayload.RefreshTokenHash, sessionPayload.UserID, sessionPayload.Revoked).Scan(&sessionModel.ID)
+
+	if queryErr != nil {
+		if queryErr == sql.ErrNoRows {
+			ur.logger.Error("Such session not found")
+
+			return nil, utils.NotFound("Such session not found")
+		}
+
+		ur.logger.Error("Failed to fetch the session from the database",
+			zap.String("error", queryErr.Error()))
+
+		return nil, utils.InternalServerError("Failed to fetch the session from the database: " + queryErr.Error())
+	}
+
+	ur.logger.Info("Successfully fetched the session from the database",
+		zap.Int("session_id", sessionModel.ID),
+	)
+
+	return sessionModel, nil
 }
 
 func (ur *UserRepository) CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError {

@@ -37,10 +37,6 @@ type DeleteUserByIdParams struct {
 	ID int `validate:"required,gte=1"`
 }
 
-type RefreshAccessTokenPayload struct {
-	Token string `json:"token" validate:"required"`
-}
-
 type LogoutUserPayload struct {
 	Token string `json:"token" validate:"required"`
 }
@@ -81,4 +77,14 @@ type FetchOtpRepoPayload struct {
 
 type DeleteOtpsRepoPayload struct {
 	UserID int `json:"user_id" validate:"required,gte=1"`
+}
+
+type RefreshAccessTokenPayload struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+type FetchSessionPayload struct {
+	UserID           int    `json:"user_id" validate:"required,gte=1"`
+	RefreshTokenHash string `json:"refresh_token_hash" validate:"required,min=6"`
+	Revoked          bool   `json:"revoked"`
 }
