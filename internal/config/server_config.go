@@ -16,6 +16,10 @@ type ServerConfig struct {
 	AccessTokenSecretKey  string        `validate:"required"`
 	RefreshTokenSecretKey string        `validate:"required"`
 	RequestsPerMinute     int           `validate:"required"`
+	MailFrom              string        `validate:"required"`
+	MailPassword          string        `validate:"required"`
+	MailSmtpHost          string        `validate:"required"`
+	MailSmtpPort          string        `validate:"required"`
 }
 
 func LoadServerConfig() (*ServerConfig, error) {
@@ -36,6 +40,10 @@ func LoadServerConfig() (*ServerConfig, error) {
 		AccessTokenSecretKey:  LoadSingleEnvVar("ACCESS_TOKEN_SECRET_KEY", ""),
 		RefreshTokenSecretKey: LoadSingleEnvVar("REFRESH_TOKEN_SECRET_KEY", ""),
 		RequestsPerMinute:     LoadSingleEnvVar("REQUESTS_PER_MINUTE", 100),
+		MailFrom:              LoadSingleEnvVar("MAIL_FROM", ""),
+		MailPassword:          LoadSingleEnvVar("MAIL_PASSWORD", ""),
+		MailSmtpHost:          LoadSingleEnvVar("MAIL_SMTP_HOST", ""),
+		MailSmtpPort:          LoadSingleEnvVar("MAIL_SMTP_PORT", ""),
 	}
 
 	return cfg, nil

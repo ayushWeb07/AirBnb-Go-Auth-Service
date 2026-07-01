@@ -2,13 +2,15 @@ package services
 
 import (
 	"net/smtp"
+
+	"github.com/ayushWeb07/AirBnb-Go-Api-Gateway/internal/config"
 )
 
-func sendEmail(to, subject, body string) error {
-	from := "bommanaayush07@gmail.com"
-	password := "wjdk xcqc cnpz gamn"
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
+func sendEmail(serverConfig *config.ServerConfig, to string, subject string, body string) error {
+	from := serverConfig.MailFrom
+	password := serverConfig.MailPassword
+	smtpHost := serverConfig.MailSmtpHost
+	smtpPort := serverConfig.MailSmtpPort
 
 	msg := []byte("To: " + to + "\r\n" +
 		"Subject: " + subject + "\r\n" +

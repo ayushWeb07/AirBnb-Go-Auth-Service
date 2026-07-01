@@ -249,7 +249,7 @@ func (us *UserService) SendOtpForVerification(otpPayload *dtos.CreateOtpServiceP
 	}
 
 	// send the email
-	emailErr := sendEmail(otpPayload.UserEmail, "Complete Your Account Verification", result)
+	emailErr := sendEmail(us.serverConfig, otpPayload.UserEmail, "Complete Your Account Verification", result)
 
 	if emailErr != nil {
 		us.logger.Fatal("Something went wrong while sending the otp verification email")
