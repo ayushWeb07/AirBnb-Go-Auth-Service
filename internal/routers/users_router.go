@@ -59,6 +59,30 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 				}, nil
 			},
 		)).Delete("/{id}", ur.UserController.DeleteUserById)
+
+		r.With(middlewares.DecodeAndValidateParams[dtos.UpdateUserByIdParams](
+			func(req *http.Request) (*dtos.UpdateUserByIdParams, *utils.AppError) {
+				userId, err := strconv.Atoi(chi.URLParam(req, "id"))
+
+				if err != nil {
+					return nil, utils.InternalServerError("User id must be provided in integer: " + err.Error())
+				}
+
+				return &dtos.UpdateUserByIdParams{
+					ID: userId,
+				}, nil
+			},
+		)).With(middlewares.DecodeAndValidateRequestBody[dtos.UpdateUserByIdPayload]).Put("/{id}", ur.UserController.UpdateUserById)
+
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.CreateOtpServicePayload]).Post("/send-otp-for-verification", ur.UserController.SendOtpForVerification)
+
+		r.With(middlewares.DecodeAndValidateRequestBody[dtos.VerifyOtpPayload]).Post("/verify-otp", ur.UserController.VerifyOtp)
+
+		r.Post("/refresh-access-token", ur.UserController.RefreshAccessToken)
+
+		r.Post("/logout", ur.UserController.LogoutUser)
+
+		r.Post("/logout-from-all-sessions", ur.UserController.LogoutUser)
 	})
 }
 

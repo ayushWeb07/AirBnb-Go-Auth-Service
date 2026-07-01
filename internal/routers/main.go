@@ -27,42 +27,27 @@ func RegisterRouters(logger *zap.Logger, db *sql.DB, serverConfig *config.Server
 	// create all repositories
 	userRepository := repositories.NewUserRepository(logger, db, serverConfig)
 	roleRepository := repositories.NewRoleRepository(logger, db, serverConfig)
-	permissionRepository := repositories.NewPermissionRepository(logger, db, serverConfig)
-
 	userRolesRepository := repositories.NewUserRolesRepository(logger, db, serverConfig)
-	rolePermissionsRepository := repositories.NewRolePermissionsRepository(logger, db, serverConfig)
 
 	// create all services
 	userService := services.NewUserService(userRepository, logger, serverConfig)
 	roleService := services.NewRoleService(roleRepository, logger, serverConfig)
-	permissionService := services.NewPermissionService(permissionRepository, logger, serverConfig)
-
 	userRolesService := services.NewUserRolesService(userRolesRepository, userRepository, roleRepository, logger, serverConfig)
-	rolePermissionsService := services.NewRolePermissionsService(rolePermissionsRepository, roleRepository, permissionRepository, userRepository, logger, serverConfig)
 
 	// create all controllers
 	userController := controllers.NewUserController(userService, logger, serverConfig)
 	roleController := controllers.NewRoleController(roleService, logger, serverConfig)
-	permissionController := controllers.NewPermissionController(permissionService, logger, serverConfig)
-
 	userRolesController := controllers.NewUserRolesController(userRolesService, logger, serverConfig)
-	rolePermissionsController := controllers.NewRolePermissionsController(rolePermissionsService, logger, serverConfig)
 
 	// create all routers
 	userRouter := NewUserRouter(userController, userRolesController, logger, serverConfig)
 	roleRouter := NewRoleRouter(roleController, logger, serverConfig)
-	permissionRouter := NewPermissionRouter(permissionController, logger, serverConfig)
-
 	userRolesRouter := NewUserRolesRouter(userRolesController, logger, serverConfig)
-	rolePermissionsRouter := NewRolePermissionsRouter(rolePermissionsController, userRolesController, logger, serverConfig)
 
 	// register all routers
 	userRouter.Register(router)
 	roleRouter.Register(router)
-	permissionRouter.Register(router)
-
 	userRolesRouter.Register(router)
-	rolePermissionsRouter.Register(router)
 
 	// register the reverse proxy servers
 	hotelService := utils.ProxyToService("http://localhost:3000")

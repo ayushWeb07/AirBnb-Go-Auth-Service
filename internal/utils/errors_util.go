@@ -19,6 +19,13 @@ func NotFound(message string) *AppError {
 	}
 }
 
+func Unauthorized(message string) *AppError {
+	return &AppError{
+		Message:    message,
+		StatusCode: http.StatusUnauthorized,
+	}
+}
+
 func InternalServerError(message string) *AppError {
 	return &AppError{
 		Message:    message,

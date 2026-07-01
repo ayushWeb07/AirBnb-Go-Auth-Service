@@ -30,13 +30,13 @@ func (userRolesController *UserRolesController) GetRolesOfUser(resWriter http.Re
 	userRolesPayload := req.Context().Value("params").(*dtos.GetRolesOfUserPayload)
 
 	// call the get user roles service
-	roleModels, serviceErr := userRolesController.UserRolesService.GetRolesOfUser(userRolesPayload)
+	roleModels, getRolesServiceErr := userRolesController.UserRolesService.GetRolesOfUser(userRolesPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if getRolesServiceErr != nil {
+		utils.WriteJsonResponse(getRolesServiceErr.StatusCode, resWriter, map[string]any{
+			"success": getRolesServiceErr.Success,
 			"message": "Something went wrong while getting the roles of the user",
-			"error":   serviceErr.Error(),
+			"error":   getRolesServiceErr.Error(),
 		})
 
 		return
@@ -53,13 +53,13 @@ func (userRolesController *UserRolesController) AssignRoleToUser(resWriter http.
 	userRolesPayload := req.Context().Value("payload").(*dtos.AssignRoleToUserPayload)
 
 	// call the assign user roles service
-	serviceErr := userRolesController.UserRolesService.AssignRoleToUser(userRolesPayload)
+	assignRoleServiceErr := userRolesController.UserRolesService.AssignRoleToUser(userRolesPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if assignRoleServiceErr != nil {
+		utils.WriteJsonResponse(assignRoleServiceErr.StatusCode, resWriter, map[string]any{
+			"success": assignRoleServiceErr.Success,
 			"message": "Something went wrong while assigning the role to the user",
-			"error":   serviceErr.Error(),
+			"error":   assignRoleServiceErr.Error(),
 		})
 
 		return
@@ -75,13 +75,13 @@ func (userRolesController *UserRolesController) RemoveRoleFromUser(resWriter htt
 	userRolesPayload := req.Context().Value("payload").(*dtos.RemoveRoleFromUserPayload)
 
 	// call the remove user roles service
-	serviceErr := userRolesController.UserRolesService.RemoveRoleFromUser(userRolesPayload)
+	removeRoleServiceErr := userRolesController.UserRolesService.RemoveRoleFromUser(userRolesPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if removeRoleServiceErr != nil {
+		utils.WriteJsonResponse(removeRoleServiceErr.StatusCode, resWriter, map[string]any{
+			"success": removeRoleServiceErr.Success,
 			"message": "Something went wrong while removing the role from the user",
-			"error":   serviceErr.Error(),
+			"error":   removeRoleServiceErr.Error(),
 		})
 
 		return
@@ -97,13 +97,13 @@ func (userRolesController *UserRolesController) CheckUserHasRole(resWriter http.
 	userRolesPayload := req.Context().Value("payload").(*dtos.CheckUserHasRolePayload)
 
 	// call the check user roles service
-	hasRole, serviceErr := userRolesController.UserRolesService.CheckUserHasRole(userRolesPayload)
+	hasRole, checkUserHasRoleServiceErr := userRolesController.UserRolesService.CheckUserHasRole(userRolesPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if checkUserHasRoleServiceErr != nil {
+		utils.WriteJsonResponse(checkUserHasRoleServiceErr.StatusCode, resWriter, map[string]any{
+			"success": checkUserHasRoleServiceErr.Success,
 			"message": "Something went wrong while checking if user has the role",
-			"error":   serviceErr.Error(),
+			"error":   checkUserHasRoleServiceErr.Error(),
 		})
 
 		return
@@ -128,13 +128,13 @@ func (userRolesController *UserRolesController) CheckUserHasAllRoles(resWriter h
 	userRolesPayload := req.Context().Value("payload").(*dtos.CheckUserHasAllRolesPayload)
 
 	// call the check user roles service
-	hasAllRoles, serviceErr := userRolesController.UserRolesService.CheckUserHasAllRoles(userRolesPayload)
+	hasAllRoles, checkUserHasAllRolesServiceErr := userRolesController.UserRolesService.CheckUserHasAllRoles(userRolesPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if checkUserHasAllRolesServiceErr != nil {
+		utils.WriteJsonResponse(checkUserHasAllRolesServiceErr.StatusCode, resWriter, map[string]any{
+			"success": checkUserHasAllRolesServiceErr.Success,
 			"message": "Something went wrong while checking if user has all the roles",
-			"error":   serviceErr.Error(),
+			"error":   checkUserHasAllRolesServiceErr.Error(),
 		})
 
 		return
@@ -159,13 +159,13 @@ func (userRolesController *UserRolesController) CheckUserHasAnyRoles(resWriter h
 	userRolesPayload := req.Context().Value("payload").(*dtos.CheckUserHasAnyRolesPayload)
 
 	// call the check user roles service
-	hasAnyRoles, serviceErr := userRolesController.UserRolesService.CheckUserHasAnyRoles(userRolesPayload)
+	hasAnyRoles, checkUserHasAnyRolesServiceErr := userRolesController.UserRolesService.CheckUserHasAnyRoles(userRolesPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if checkUserHasAnyRolesServiceErr != nil {
+		utils.WriteJsonResponse(checkUserHasAnyRolesServiceErr.StatusCode, resWriter, map[string]any{
+			"success": checkUserHasAnyRolesServiceErr.Success,
 			"message": "Something went wrong while checking if user has any required roles",
-			"error":   serviceErr.Error(),
+			"error":   checkUserHasAnyRolesServiceErr.Error(),
 		})
 
 		return

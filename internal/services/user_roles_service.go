@@ -32,32 +32,32 @@ func (userRolesService *UserRolesService) GetRolesOfUser(userRolesPayload *dtos.
 	userRolesService.logger.Info("Get user roles service called...")
 
 	// check if user exists
-	_, userRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
+	_, getUserRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
 
-	if userRepositoryErr != nil {
-		return nil, userRepositoryErr
+	if getUserRepositoryErr != nil {
+		return nil, getUserRepositoryErr
 	}
 
 	// call the fetch all user roles repository
-	roleModels, repositoryErr := userRolesService.UserRolesRepository.GetRolesOfUser(userRolesPayload)
-	return roleModels, repositoryErr
+	roleModels, getRolesRepositoryErr := userRolesService.UserRolesRepository.GetRolesOfUser(userRolesPayload)
+	return roleModels, getRolesRepositoryErr
 }
 
 func (userRolesService *UserRolesService) AssignRoleToUser(userRolesPayload *dtos.AssignRoleToUserPayload) *utils.AppError {
 	userRolesService.logger.Info("Assign user roles service called...")
 
 	// check if user exists
-	_, userRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
+	_, getUserRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
 
-	if userRepositoryErr != nil {
-		return userRepositoryErr
+	if getUserRepositoryErr != nil {
+		return getUserRepositoryErr
 	}
 
 	// check if role exists
-	_, roleRepositoryErr := userRolesService.RoleRepository.GetRoleById(&dtos.GetRoleByIdParams{ID: userRolesPayload.RoleID})
+	_, getRoleRepositoryErr := userRolesService.RoleRepository.GetRoleById(&dtos.GetRoleByIdParams{ID: userRolesPayload.RoleID})
 
-	if roleRepositoryErr != nil {
-		return roleRepositoryErr
+	if getRoleRepositoryErr != nil {
+		return getRoleRepositoryErr
 	}
 
 	// check if user already has the role
@@ -71,25 +71,25 @@ func (userRolesService *UserRolesService) AssignRoleToUser(userRolesPayload *dto
 	}
 
 	// call the assign user roles repository
-	repositoryErr := userRolesService.UserRolesRepository.AssignRoleToUser(userRolesPayload)
-	return repositoryErr
+	assignRoleRepositoryErr := userRolesService.UserRolesRepository.AssignRoleToUser(userRolesPayload)
+	return assignRoleRepositoryErr
 }
 
 func (userRolesService *UserRolesService) RemoveRoleFromUser(userRolesPayload *dtos.RemoveRoleFromUserPayload) *utils.AppError {
 	userRolesService.logger.Info("Remove user roles service called...")
 
 	// check if user exists
-	_, userRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
+	_, getUserRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
 
-	if userRepositoryErr != nil {
-		return userRepositoryErr
+	if getUserRepositoryErr != nil {
+		return getUserRepositoryErr
 	}
 
 	// check if role exists
-	_, roleRepositoryErr := userRolesService.RoleRepository.GetRoleById(&dtos.GetRoleByIdParams{ID: userRolesPayload.RoleID})
+	_, getRoleRepositoryErr := userRolesService.RoleRepository.GetRoleById(&dtos.GetRoleByIdParams{ID: userRolesPayload.RoleID})
 
-	if roleRepositoryErr != nil {
-		return roleRepositoryErr
+	if getRoleRepositoryErr != nil {
+		return getRoleRepositoryErr
 	}
 
 	// check if user has the role
@@ -103,25 +103,25 @@ func (userRolesService *UserRolesService) RemoveRoleFromUser(userRolesPayload *d
 	}
 
 	// call the remove user roles repository
-	repositoryErr := userRolesService.UserRolesRepository.RemoveRoleFromUser(userRolesPayload)
-	return repositoryErr
+	removeRoleRepositoryErr := userRolesService.UserRolesRepository.RemoveRoleFromUser(userRolesPayload)
+	return removeRoleRepositoryErr
 }
 
 func (userRolesService *UserRolesService) CheckUserHasRole(userRolesPayload *dtos.CheckUserHasRolePayload) (bool, *utils.AppError) {
 	userRolesService.logger.Info("Check user role service called...")
 
 	// check if user exists
-	_, userRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
+	_, getUserRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
 
-	if userRepositoryErr != nil {
-		return false, userRepositoryErr
+	if getUserRepositoryErr != nil {
+		return false, getUserRepositoryErr
 	}
 
 	// check if role exists
-	_, roleRepositoryErr := userRolesService.RoleRepository.GetRoleById(&dtos.GetRoleByIdParams{ID: userRolesPayload.RoleID})
+	_, getRoleRepositoryErr := userRolesService.RoleRepository.GetRoleById(&dtos.GetRoleByIdParams{ID: userRolesPayload.RoleID})
 
-	if roleRepositoryErr != nil {
-		return false, roleRepositoryErr
+	if getRoleRepositoryErr != nil {
+		return false, getRoleRepositoryErr
 	}
 
 	// call the check user role repository
@@ -133,10 +133,10 @@ func (userRolesService *UserRolesService) CheckUserHasAllRoles(userRolesPayload 
 	userRolesService.logger.Info("Check user has all roles service called...")
 
 	// check if user exists
-	_, userRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
+	_, getUserRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
 
-	if userRepositoryErr != nil {
-		return false, userRepositoryErr
+	if getUserRepositoryErr != nil {
+		return false, getUserRepositoryErr
 	}
 
 	// call the check user role repository
@@ -148,10 +148,10 @@ func (userRolesService *UserRolesService) CheckUserHasAnyRoles(userRolesPayload 
 	userRolesService.logger.Info("Check user has any roles service called...")
 
 	// check if user exists
-	_, userRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
+	_, getUserRepositoryErr := userRolesService.UserRepository.GetUserById(&dtos.GetUserByIdParams{ID: userRolesPayload.UserID})
 
-	if userRepositoryErr != nil {
-		return false, userRepositoryErr
+	if getUserRepositoryErr != nil {
+		return false, getUserRepositoryErr
 	}
 
 	// call the check user role repository

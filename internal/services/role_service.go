@@ -27,40 +27,40 @@ func (roleService *RoleService) CreateRole(rolePayload *dtos.CreateRolePayload) 
 	roleService.logger.Info("Create role service called...")
 
 	// call the create role repository
-	repositoryErr := roleService.RoleRepository.CreateRole(rolePayload)
-	return repositoryErr
+	createRoleRepositoryErr := roleService.RoleRepository.CreateRole(rolePayload)
+	return createRoleRepositoryErr
 }
 
 func (roleService *RoleService) GetAllRoles() ([]*models.RoleModel, *utils.AppError) {
 	roleService.logger.Info("Get all roles service called...")
 
 	// call the fetch all roles repository
-	roleModels, repositoryErr := roleService.RoleRepository.GetAllRoles()
-	return roleModels, repositoryErr
+	roleModels, getRolesRepositoryErr := roleService.RoleRepository.GetAllRoles()
+	return roleModels, getRolesRepositoryErr
 }
 
 func (roleService *RoleService) GetRoleById(roleParams *dtos.GetRoleByIdParams) (*models.RoleModel, *utils.AppError) {
 	roleService.logger.Info("Get by id role service called...")
 
 	// call the fetch role by id repository
-	roleModel, repositoryErr := roleService.RoleRepository.GetRoleById(roleParams)
-	return roleModel, repositoryErr
+	roleModel, getRoleRepositoryErr := roleService.RoleRepository.GetRoleById(roleParams)
+	return roleModel, getRoleRepositoryErr
 }
 
 func (roleService *RoleService) UpdateRoleById(roleParams *dtos.UpdateRoleByIdParams, rolePayload *dtos.UpdateRoleByIdPayload) *utils.AppError {
 	roleService.logger.Info("Update by id role service called...")
 
 	// call the update role by id repository
-	repositoryErr := roleService.RoleRepository.UpdateRoleById(roleParams, rolePayload)
-	return repositoryErr
+	updateRoleRepositoryErr := roleService.RoleRepository.UpdateRoleById(roleParams, rolePayload)
+	return updateRoleRepositoryErr
 }
 
 func (roleService *RoleService) DeleteRoleById(roleParams *dtos.DeleteRoleByIdParams) *utils.AppError {
 	roleService.logger.Info("Delete role service called...")
 
 	// call the delete role by id repository
-	repositoryErr := roleService.RoleRepository.DeleteRoleById(roleParams)
-	return repositoryErr
+	deleteRoleRepositoryErr := roleService.RoleRepository.DeleteRoleById(roleParams)
+	return deleteRoleRepositoryErr
 }
 
 func NewRoleService(roleRepository repositories.RoleRepositoryInterface, logger *zap.Logger, serverConfig *config.ServerConfig) RoleServiceInterface {

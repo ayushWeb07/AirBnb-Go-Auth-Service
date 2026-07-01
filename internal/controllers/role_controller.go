@@ -28,13 +28,13 @@ func (roleController *RoleController) CreateRole(resWriter http.ResponseWriter, 
 	rolePayload := req.Context().Value("payload").(*dtos.CreateRolePayload)
 
 	// call the create role service
-	serviceErr := roleController.RoleService.CreateRole(rolePayload)
+	createRoleServiceErr := roleController.RoleService.CreateRole(rolePayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if createRoleServiceErr != nil {
+		utils.WriteJsonResponse(createRoleServiceErr.StatusCode, resWriter, map[string]any{
+			"success": createRoleServiceErr.Success,
 			"message": "Something went wrong while creating the role",
-			"error":   serviceErr.Error(),
+			"error":   createRoleServiceErr.Error(),
 		})
 
 		return
@@ -48,13 +48,13 @@ func (roleController *RoleController) CreateRole(resWriter http.ResponseWriter, 
 
 func (roleController *RoleController) GetAllRoles(resWriter http.ResponseWriter, req *http.Request) {
 	// call the fetch roles service
-	roleModels, serviceErr := roleController.RoleService.GetAllRoles()
+	roleModels, getRolesServiceErr := roleController.RoleService.GetAllRoles()
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if getRolesServiceErr != nil {
+		utils.WriteJsonResponse(getRolesServiceErr.StatusCode, resWriter, map[string]any{
+			"success": getRolesServiceErr.Success,
 			"message": "Something went wrong while getting the roles",
-			"error":   serviceErr.Error(),
+			"error":   getRolesServiceErr.Error(),
 		})
 
 		return
@@ -71,13 +71,13 @@ func (roleController *RoleController) GetRoleById(resWriter http.ResponseWriter,
 	roleParams := req.Context().Value("params").(*dtos.GetRoleByIdParams)
 
 	// call the fetch user by id service
-	roleModel, serviceErr := roleController.RoleService.GetRoleById(roleParams)
+	roleModel, getRoleServiceErr := roleController.RoleService.GetRoleById(roleParams)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if getRoleServiceErr != nil {
+		utils.WriteJsonResponse(getRoleServiceErr.StatusCode, resWriter, map[string]any{
+			"success": getRoleServiceErr.Success,
 			"message": "Something went wrong while getting the role by id",
-			"error":   serviceErr.Error(),
+			"error":   getRoleServiceErr.Error(),
 		})
 
 		return
@@ -95,13 +95,13 @@ func (roleController *RoleController) UpdateRoleById(resWriter http.ResponseWrit
 	rolePayload := req.Context().Value("payload").(*dtos.UpdateRoleByIdPayload)
 
 	// call the delete user service
-	serviceErr := roleController.RoleService.UpdateRoleById(roleParams, rolePayload)
+	updateRoleServiceErr := roleController.RoleService.UpdateRoleById(roleParams, rolePayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if updateRoleServiceErr != nil {
+		utils.WriteJsonResponse(updateRoleServiceErr.StatusCode, resWriter, map[string]any{
+			"success": updateRoleServiceErr.Success,
 			"message": "Something went wrong while updating the role",
-			"error":   serviceErr.Error(),
+			"error":   updateRoleServiceErr.Error(),
 		})
 
 		return
@@ -117,13 +117,13 @@ func (roleController *RoleController) DeleteRoleById(resWriter http.ResponseWrit
 	roleParams := req.Context().Value("params").(*dtos.DeleteRoleByIdParams)
 
 	// call the delete user service
-	serviceErr := roleController.RoleService.DeleteRoleById(roleParams)
+	deleteRoleServiceErr := roleController.RoleService.DeleteRoleById(roleParams)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if deleteRoleServiceErr != nil {
+		utils.WriteJsonResponse(deleteRoleServiceErr.StatusCode, resWriter, map[string]any{
+			"success": deleteRoleServiceErr.Success,
 			"message": "Something went wrong while deleting the role",
-			"error":   serviceErr.Error(),
+			"error":   deleteRoleServiceErr.Error(),
 		})
 
 		return
