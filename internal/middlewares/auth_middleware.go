@@ -98,7 +98,7 @@ func AuthMiddleware(serverConfig *config.ServerConfig) func(next http.Handler) h
 			}
 
 			// access the payload
-			userId := claims["id"].(float64)
+			userId := claims["user_id"].(float64)
 			expiryTime := claims["exp"].(float64)
 
 			// check if token has expired
