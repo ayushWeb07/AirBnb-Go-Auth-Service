@@ -31,6 +31,7 @@ type UserControllerInterface interface {
 	VerifyOtp(resWriter http.ResponseWriter, req *http.Request)
 	RefreshAccessToken(resWriter http.ResponseWriter, req *http.Request)
 	LogoutUser(resWriter http.ResponseWriter, req *http.Request)
+	LogoutUserFromAllSessions(resWriter http.ResponseWriter, req *http.Request)
 }
 
 type UserController struct {
@@ -363,6 +364,66 @@ func (uc *UserController) LogoutUser(resWriter http.ResponseWriter, req *http.Re
 	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
 		"success": true,
 		"message": "You have been successfully logged out",
+	})
+}
+
+func (uc *UserController) LogoutUserFromAllSessions(resWriter http.ResponseWriter, req *http.Request) {
+
+	// Retrieve the cookie
+	cookie, err := req.Cookie("refresh_token")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			utils.WriteJsonResponse(http.StatusNotFound, resWriter, map[string]any{
+				"success": false,
+				"message": "Missing tokens, please login",
+				"error":   err.Error(),
+			})
+
+			return
+		}
+
+		utils.WriteJsonResponse(http.StatusInternalServerError, resWriter, map[string]any{
+			"success": false,
+			"message": "Something went wrong while retrieving tokens",
+			"error":   err.Error(),
+		})
+
+		return
+	}
+
+	// call the logout from all sessions service
+	tokenPayload := &dtos.LogoutUserFromAllSessionsPayload{
+		RefreshToken: cookie.Value,
+	}
+
+	serviceErr := uc.UserService.LogoutUserFromAllSessions(tokenPayload)
+
+	if serviceErr != nil {
+		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
+			"success": serviceErr.Success,
+			"message": "Something went wrong while logging out from all sessions",
+			"error":   serviceErr.Error(),
+		})
+
+		return
+	}
+
+	// clear cookie to remove refresh token
+	cookie = &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	http.SetCookie(resWriter, cookie)
+
+	utils.WriteJsonResponse(http.StatusOK, resWriter, map[string]any{
+		"success": true,
+		"message": "You have been successfully logged out from all sessions",
 	})
 }
 

@@ -37,10 +37,6 @@ type DeleteUserByIdParams struct {
 	ID int `validate:"required,gte=1"`
 }
 
-type LogoutUserFromAllSessionsPayload struct {
-	Token string `json:"token" validate:"required"`
-}
-
 type SendOtpForVerificationPayload struct {
 	UserEmail string `json:"user_email" validate:"required"`
 }
@@ -89,10 +85,18 @@ type LogoutUserPayload struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
+type LogoutUserFromAllSessionsPayload struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
 type UpdateSessionByIdParams struct {
 	ID int `json:"id" validate:"required,gte=1"`
 }
 
 type UpdateSessionByIdPayload struct {
 	Revoked bool `json:"revoked" validate:"required"`
+}
+
+type RevokeAllSessionsPayload struct {
+	UserID int `json:"user_id" validate:"required,gte=1"`
 }

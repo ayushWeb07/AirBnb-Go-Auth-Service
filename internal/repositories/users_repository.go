@@ -24,6 +24,7 @@ type UserRepositoryInterface interface {
 	CreateOtp(otpPayload *dtos.CreateOtpRepoPayload) *utils.AppError
 	FetchOtp(otpPayload *dtos.FetchOtpRepoPayload) (*models.OtpModel, *utils.AppError)
 	DeleteOtps(otpPayload *dtos.DeleteOtpsRepoPayload) *utils.AppError
+	RevokeAllSessions(sessionPayload *dtos.RevokeAllSessionsPayload) *utils.AppError
 }
 
 type UserRepository struct {
@@ -430,6 +431,41 @@ func (ur *UserRepository) DeleteOtps(otpPayload *dtos.DeleteOtpsRepoPayload) *ut
 
 	ur.logger.Info("Successfully deleted the otps from the database",
 		zap.Int("user_id", otpPayload.UserID))
+
+	return nil
+}
+
+func (ur *UserRepository) RevokeAllSessions(sessionPayload *dtos.RevokeAllSessionsPayload) *utils.AppError {
+	// prepare and execute the query
+	query := "UPDATE sessions SET revoked = true WHERE user_id = ? AND revoked = false"
+	result, queryExecErr := ur.db.Exec(query, sessionPayload.UserID)
+
+	if queryExecErr != nil {
+		ur.logger.Error("Failed to revoke sessions from the database",
+			zap.String("error", queryExecErr.Error()))
+
+		return utils.InternalServerError("Failed to revoke sessions from the database: " + queryExecErr.Error())
+	}
+
+	// check if any rows got affected
+	rowsAffected, rowsErr := result.RowsAffected()
+
+	if rowsErr != nil {
+		ur.logger.Error("Failed to revoke sessions from the database",
+			zap.String("error", rowsErr.Error()))
+
+		return utils.InternalServerError("Failed to revoke sessions from the database: " + rowsErr.Error())
+	}
+
+	if rowsAffected == 0 {
+		ur.logger.Error("No sessions has been revoke from the database",
+			zap.Int("user_id", sessionPayload.UserID))
+
+		return utils.NotFound("Sessions of such user not found")
+	}
+
+	ur.logger.Info("Successfully revoked the sessions from the database",
+		zap.Int("user_id", sessionPayload.UserID))
 
 	return nil
 }

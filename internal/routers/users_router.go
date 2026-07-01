@@ -81,6 +81,8 @@ func (ur *UserRouter) Register(r *chi.Mux) {
 		r.Post("/refresh-access-token", ur.UserController.RefreshAccessToken)
 
 		r.Post("/logout", ur.UserController.LogoutUser)
+
+		r.Post("/logout-from-all-sessions", ur.UserController.LogoutUser)
 	})
 }
 
