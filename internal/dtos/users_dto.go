@@ -37,48 +37,8 @@ type DeleteUserByIdParams struct {
 	ID int `validate:"required,gte=1"`
 }
 
-type SendOtpForVerificationPayload struct {
-	UserEmail string `json:"user_email" validate:"required"`
-}
-
-type CreateSessionPayload struct {
-	UserID           int    `json:"user_id" validate:"required,gte=1"`
-	RefreshTokenHash string `json:"refresh_token_hash" validate:"required,min=6"`
-}
-
-type CreateOtpServicePayload struct {
-	UserEmail string `json:"user_email" validate:"required,email,min=6,max=100"`
-}
-
-type CreateOtpRepoPayload struct {
-	UserID    int    `json:"user_id" validate:"required,gte=1"`
-	UserEmail string `json:"user_email" validate:"required,email,min=6,max=100"`
-	OtpHash   string `json:"otp_hash" validate:"required,min=6"`
-}
-
-type VerifyOtpPayload struct {
-	UserEmail string `json:"user_email" validate:"required,email,min=6,max=100"`
-	Otp       string `json:"otp" validate:"required,len=10"`
-}
-
-type FetchOtpRepoPayload struct {
-	UserID    int    `json:"user_id" validate:"required,gte=1"`
-	UserEmail string `json:"user_email" validate:"required,email,min=6,max=100"`
-	OtpHash   string `json:"otp_hash" validate:"required,min=6"`
-}
-
-type DeleteOtpsRepoPayload struct {
-	UserID int `json:"user_id" validate:"required,gte=1"`
-}
-
 type RefreshAccessTokenPayload struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
-}
-
-type FetchSessionPayload struct {
-	UserID           int    `json:"user_id" validate:"required,gte=1"`
-	RefreshTokenHash string `json:"refresh_token_hash" validate:"required,min=6"`
-	Revoked          bool   `json:"revoked"`
 }
 
 type LogoutUserPayload struct {
@@ -87,16 +47,4 @@ type LogoutUserPayload struct {
 
 type LogoutUserFromAllSessionsPayload struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
-}
-
-type UpdateSessionByIdParams struct {
-	ID int `json:"id" validate:"required,gte=1"`
-}
-
-type UpdateSessionByIdPayload struct {
-	Revoked bool `json:"revoked" validate:"required"`
-}
-
-type RevokeAllSessionsPayload struct {
-	UserID int `json:"user_id" validate:"required,gte=1"`
 }

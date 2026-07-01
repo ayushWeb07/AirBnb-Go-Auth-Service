@@ -44,13 +44,13 @@ func (uc *UserController) CreateUser(resWriter http.ResponseWriter, req *http.Re
 	userPayload := req.Context().Value("payload").(*dtos.CreateUserPayload)
 
 	// call the create user service
-	serviceErr := uc.UserService.CreateUser(userPayload)
+	createUserServiceErr := uc.UserService.CreateUser(userPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if createUserServiceErr != nil {
+		utils.WriteJsonResponse(createUserServiceErr.StatusCode, resWriter, map[string]any{
+			"success": createUserServiceErr.Success,
 			"message": "Something went wrong while creating the user",
-			"error":   serviceErr.Error(),
+			"error":   createUserServiceErr.Error(),
 		})
 
 		return
@@ -68,13 +68,13 @@ func (uc *UserController) LoginUser(resWriter http.ResponseWriter, req *http.Req
 	userPayload := req.Context().Value("payload").(*dtos.LoginUserPayload)
 
 	// call the login user service
-	accessToken, refreshToken, serviceErr := uc.UserService.LoginUser(userPayload)
+	accessToken, refreshToken, loginUserServiceErr := uc.UserService.LoginUser(userPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if loginUserServiceErr != nil {
+		utils.WriteJsonResponse(loginUserServiceErr.StatusCode, resWriter, map[string]any{
+			"success": loginUserServiceErr.Success,
 			"message": "Something went wrong while logging in",
-			"error":   serviceErr.Error(),
+			"error":   loginUserServiceErr.Error(),
 		})
 
 		return
@@ -102,13 +102,13 @@ func (uc *UserController) LoginUser(resWriter http.ResponseWriter, req *http.Req
 
 func (uc *UserController) GetAllUsers(resWriter http.ResponseWriter, req *http.Request) {
 	// call the fetch all users service
-	userModels, serviceErr := uc.UserService.GetAllUsers()
+	userModels, getUsersServiceErr := uc.UserService.GetAllUsers()
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if getUsersServiceErr != nil {
+		utils.WriteJsonResponse(getUsersServiceErr.StatusCode, resWriter, map[string]any{
+			"success": getUsersServiceErr.Success,
 			"message": "Something went wrong while getting all users",
-			"error":   serviceErr.Error(),
+			"error":   getUsersServiceErr.Error(),
 		})
 
 		return
@@ -125,13 +125,13 @@ func (uc *UserController) GetUserById(resWriter http.ResponseWriter, req *http.R
 	userParams := req.Context().Value("params").(*dtos.GetUserByIdParams)
 
 	// call the fetch user by id service
-	userModel, serviceErr := uc.UserService.GetUserById(userParams)
+	userModel, getUserServiceErr := uc.UserService.GetUserById(userParams)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if getUserServiceErr != nil {
+		utils.WriteJsonResponse(getUserServiceErr.StatusCode, resWriter, map[string]any{
+			"success": getUserServiceErr.Success,
 			"message": "Something went wrong while getting the user by id",
-			"error":   serviceErr.Error(),
+			"error":   getUserServiceErr.Error(),
 		})
 
 		return
@@ -148,13 +148,13 @@ func (uc *UserController) DeleteUserById(resWriter http.ResponseWriter, req *htt
 	userParams := req.Context().Value("params").(*dtos.DeleteUserByIdParams)
 
 	// call the delete user service
-	serviceErr := uc.UserService.DeleteUserById(userParams)
+	deleteUserServiceErr := uc.UserService.DeleteUserById(userParams)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if deleteUserServiceErr != nil {
+		utils.WriteJsonResponse(deleteUserServiceErr.StatusCode, resWriter, map[string]any{
+			"success": deleteUserServiceErr.Success,
 			"message": "Something went wrong while deleting the user",
-			"error":   serviceErr.Error(),
+			"error":   deleteUserServiceErr.Error(),
 		})
 
 		return
@@ -171,13 +171,13 @@ func (uc *UserController) UpdateUserById(resWriter http.ResponseWriter, req *htt
 	userPayload := req.Context().Value("payload").(*dtos.UpdateUserByIdPayload)
 
 	// call the update user service
-	serviceErr := uc.UserService.UpdateUserById(userParams, userPayload)
+	updateUserServiceErr := uc.UserService.UpdateUserById(userParams, userPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if updateUserServiceErr != nil {
+		utils.WriteJsonResponse(updateUserServiceErr.StatusCode, resWriter, map[string]any{
+			"success": updateUserServiceErr.Success,
 			"message": "Something went wrong while updating the user",
-			"error":   serviceErr.Error(),
+			"error":   updateUserServiceErr.Error(),
 		})
 
 		return
@@ -193,13 +193,13 @@ func (uc *UserController) GetProfile(resWriter http.ResponseWriter, req *http.Re
 	userParams := req.Context().Value("params").(*dtos.GetUserByIdParams)
 
 	// call the fetch user by id service
-	userModel, serviceErr := uc.UserService.GetUserById(userParams)
+	userModel, getUserServiceErr := uc.UserService.GetUserById(userParams)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if getUserServiceErr != nil {
+		utils.WriteJsonResponse(getUserServiceErr.StatusCode, resWriter, map[string]any{
+			"success": getUserServiceErr.Success,
 			"message": "Something went wrong while getting the profile",
-			"error":   serviceErr.Error(),
+			"error":   getUserServiceErr.Error(),
 		})
 
 		return
@@ -216,13 +216,13 @@ func (uc *UserController) SendOtpForVerification(resWriter http.ResponseWriter, 
 	userPayload := req.Context().Value("payload").(*dtos.CreateOtpServicePayload)
 
 	// call the create user service
-	serviceErr := uc.UserService.SendOtpForVerification(userPayload)
+	sendOtpServiceErr := uc.UserService.SendOtpForVerification(userPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if sendOtpServiceErr != nil {
+		utils.WriteJsonResponse(sendOtpServiceErr.StatusCode, resWriter, map[string]any{
+			"success": sendOtpServiceErr.Success,
 			"message": "Something went wrong while sending otp for verification",
-			"error":   serviceErr.Error(),
+			"error":   sendOtpServiceErr.Error(),
 		})
 
 		return
@@ -239,13 +239,13 @@ func (uc *UserController) VerifyOtp(resWriter http.ResponseWriter, req *http.Req
 	userPayload := req.Context().Value("payload").(*dtos.VerifyOtpPayload)
 
 	// call the verify otp user service
-	serviceErr := uc.UserService.VerifyOtp(userPayload)
+	verifyOtpServiceErr := uc.UserService.VerifyOtp(userPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if verifyOtpServiceErr != nil {
+		utils.WriteJsonResponse(verifyOtpServiceErr.StatusCode, resWriter, map[string]any{
+			"success": verifyOtpServiceErr.Success,
 			"message": "Something went wrong while user verification",
-			"error":   serviceErr.Error(),
+			"error":   verifyOtpServiceErr.Error(),
 		})
 
 		return
@@ -261,13 +261,13 @@ func (uc *UserController) VerifyOtp(resWriter http.ResponseWriter, req *http.Req
 func (uc *UserController) RefreshAccessToken(resWriter http.ResponseWriter, req *http.Request) {
 
 	// Retrieve the cookie
-	cookie, err := req.Cookie("refresh_token")
-	if err != nil {
-		if errors.Is(err, http.ErrNoCookie) {
+	cookie, cookieErr := req.Cookie("refresh_token")
+	if cookieErr != nil {
+		if errors.Is(cookieErr, http.ErrNoCookie) {
 			utils.WriteJsonResponse(http.StatusNotFound, resWriter, map[string]any{
 				"success": false,
 				"message": "Missing tokens, please login",
-				"error":   err.Error(),
+				"error":   cookieErr.Error(),
 			})
 
 			return
@@ -276,7 +276,7 @@ func (uc *UserController) RefreshAccessToken(resWriter http.ResponseWriter, req 
 		utils.WriteJsonResponse(http.StatusInternalServerError, resWriter, map[string]any{
 			"success": false,
 			"message": "Something went wrong while retrieving tokens",
-			"error":   err.Error(),
+			"error":   cookieErr.Error(),
 		})
 
 		return
@@ -287,13 +287,13 @@ func (uc *UserController) RefreshAccessToken(resWriter http.ResponseWriter, req 
 		RefreshToken: cookie.Value,
 	}
 
-	accessToken, serviceErr := uc.UserService.RefreshAccessToken(tokenPayload)
+	accessToken, refreshTokenServiceErr := uc.UserService.RefreshAccessToken(tokenPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if refreshTokenServiceErr != nil {
+		utils.WriteJsonResponse(refreshTokenServiceErr.StatusCode, resWriter, map[string]any{
+			"success": refreshTokenServiceErr.Success,
 			"message": "Something went wrong while refreshing access token",
-			"error":   serviceErr.Error(),
+			"error":   refreshTokenServiceErr.Error(),
 		})
 
 		return
@@ -310,13 +310,13 @@ func (uc *UserController) RefreshAccessToken(resWriter http.ResponseWriter, req 
 func (uc *UserController) LogoutUser(resWriter http.ResponseWriter, req *http.Request) {
 
 	// Retrieve the cookie
-	cookie, err := req.Cookie("refresh_token")
-	if err != nil {
-		if errors.Is(err, http.ErrNoCookie) {
+	cookie, cookieErr := req.Cookie("refresh_token")
+	if cookieErr != nil {
+		if errors.Is(cookieErr, http.ErrNoCookie) {
 			utils.WriteJsonResponse(http.StatusNotFound, resWriter, map[string]any{
 				"success": false,
 				"message": "Missing tokens, please login",
-				"error":   err.Error(),
+				"error":   cookieErr.Error(),
 			})
 
 			return
@@ -325,7 +325,7 @@ func (uc *UserController) LogoutUser(resWriter http.ResponseWriter, req *http.Re
 		utils.WriteJsonResponse(http.StatusInternalServerError, resWriter, map[string]any{
 			"success": false,
 			"message": "Something went wrong while retrieving tokens",
-			"error":   err.Error(),
+			"error":   cookieErr.Error(),
 		})
 
 		return
@@ -336,13 +336,13 @@ func (uc *UserController) LogoutUser(resWriter http.ResponseWriter, req *http.Re
 		RefreshToken: cookie.Value,
 	}
 
-	serviceErr := uc.UserService.LogoutUser(tokenPayload)
+	logoutUserServiceErr := uc.UserService.LogoutUser(tokenPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if logoutUserServiceErr != nil {
+		utils.WriteJsonResponse(logoutUserServiceErr.StatusCode, resWriter, map[string]any{
+			"success": logoutUserServiceErr.Success,
 			"message": "Something went wrong while logging out",
-			"error":   serviceErr.Error(),
+			"error":   logoutUserServiceErr.Error(),
 		})
 
 		return
@@ -370,13 +370,13 @@ func (uc *UserController) LogoutUser(resWriter http.ResponseWriter, req *http.Re
 func (uc *UserController) LogoutUserFromAllSessions(resWriter http.ResponseWriter, req *http.Request) {
 
 	// Retrieve the cookie
-	cookie, err := req.Cookie("refresh_token")
-	if err != nil {
-		if errors.Is(err, http.ErrNoCookie) {
+	cookie, cookieErr := req.Cookie("refresh_token")
+	if cookieErr != nil {
+		if errors.Is(cookieErr, http.ErrNoCookie) {
 			utils.WriteJsonResponse(http.StatusNotFound, resWriter, map[string]any{
 				"success": false,
 				"message": "Missing tokens, please login",
-				"error":   err.Error(),
+				"error":   cookieErr.Error(),
 			})
 
 			return
@@ -385,7 +385,7 @@ func (uc *UserController) LogoutUserFromAllSessions(resWriter http.ResponseWrite
 		utils.WriteJsonResponse(http.StatusInternalServerError, resWriter, map[string]any{
 			"success": false,
 			"message": "Something went wrong while retrieving tokens",
-			"error":   err.Error(),
+			"error":   cookieErr.Error(),
 		})
 
 		return
@@ -396,13 +396,13 @@ func (uc *UserController) LogoutUserFromAllSessions(resWriter http.ResponseWrite
 		RefreshToken: cookie.Value,
 	}
 
-	serviceErr := uc.UserService.LogoutUserFromAllSessions(tokenPayload)
+	logoutUserFromSessionsServiceErr := uc.UserService.LogoutUserFromAllSessions(tokenPayload)
 
-	if serviceErr != nil {
-		utils.WriteJsonResponse(serviceErr.StatusCode, resWriter, map[string]any{
-			"success": serviceErr.Success,
+	if logoutUserFromSessionsServiceErr != nil {
+		utils.WriteJsonResponse(logoutUserFromSessionsServiceErr.StatusCode, resWriter, map[string]any{
+			"success": logoutUserFromSessionsServiceErr.Success,
 			"message": "Something went wrong while logging out from all sessions",
-			"error":   serviceErr.Error(),
+			"error":   logoutUserFromSessionsServiceErr.Error(),
 		})
 
 		return

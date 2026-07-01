@@ -39,12 +39,12 @@ func (us *UserService) CreateUser(userPayload *dtos.CreateUserPayload) *utils.Ap
 	us.logger.Info("Create user service called...")
 
 	// check if the user already exists
-	_, repositoryErr := us.UserRepository.GetUserByUsernameAndEmail(&dtos.GetUserByUsernameAndEmailPayload{
+	_, getUserRepositoryErr := us.UserRepository.GetUserByUsernameAndEmail(&dtos.GetUserByUsernameAndEmailPayload{
 		Username: userPayload.Username,
 		Email:    userPayload.Email,
 	})
 
-	if repositoryErr == nil {
+	if getUserRepositoryErr == nil {
 		return utils.BadRequest("User with such username and email, already exists")
 	}
 
@@ -61,10 +61,10 @@ func (us *UserService) CreateUser(userPayload *dtos.CreateUserPayload) *utils.Ap
 	userPayload.Password = string(bytes)
 
 	// call the create user repository
-	repositoryErr = us.UserRepository.CreateUser(userPayload)
+	createUserRepositoryErr := us.UserRepository.CreateUser(userPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if createUserRepositoryErr != nil {
+		return createUserRepositoryErr
 	}
 
 	us.logger.Info("Create user service was successful")
@@ -76,13 +76,13 @@ func (us *UserService) LoginUser(userPayload *dtos.LoginUserPayload) (string, st
 	us.logger.Info("Login user service called...")
 
 	// fetch the user by username and email repository
-	existingUserModel, repositoryErr := us.UserRepository.GetUserByUsernameAndEmail(&dtos.GetUserByUsernameAndEmailPayload{
+	existingUserModel, getUserRepositoryErr := us.UserRepository.GetUserByUsernameAndEmail(&dtos.GetUserByUsernameAndEmailPayload{
 		Username: userPayload.Username,
 		Email:    userPayload.Email,
 	})
 
-	if repositoryErr != nil {
-		return "", "", repositoryErr
+	if getUserRepositoryErr != nil {
+		return "", "", getUserRepositoryErr
 	}
 
 	// check if user is verified
@@ -142,12 +142,12 @@ func (us *UserService) LoginUser(userPayload *dtos.LoginUserPayload) (string, st
 		RefreshTokenHash: refreshTokenHash,
 	}
 
-	repositoryErr = us.UserRepository.CreateSession(sessionPayload)
+	createSessionRepositoryErr := us.UserRepository.CreateSession(sessionPayload)
 
-	if repositoryErr != nil {
+	if createSessionRepositoryErr != nil {
 		us.logger.Fatal("Something went wrong while generating the session")
 
-		return "", "", repositoryErr
+		return "", "", createSessionRepositoryErr
 	}
 
 	us.logger.Info("Login user service was successful",
@@ -160,44 +160,44 @@ func (us *UserService) GetAllUsers() ([]*models.UserModel, *utils.AppError) {
 	us.logger.Info("Get all users service called...")
 
 	// call the fetch all users repository
-	userModels, repositoryErr := us.UserRepository.GetAllUsers()
-	return userModels, repositoryErr
+	userModels, getUsersRepositoryErr := us.UserRepository.GetAllUsers()
+	return userModels, getUsersRepositoryErr
 }
 
 func (us *UserService) GetUserById(userParams *dtos.GetUserByIdParams) (*models.UserModel, *utils.AppError) {
 	us.logger.Info("Get by id user service called...")
 
 	// call the fetch user by id repository
-	userModel, repositoryErr := us.UserRepository.GetUserById(userParams)
-	return userModel, repositoryErr
+	userModel, getUserRepositoryErr := us.UserRepository.GetUserById(userParams)
+	return userModel, getUserRepositoryErr
 }
 
 func (us *UserService) UpdateUserById(userParams *dtos.UpdateUserByIdParams, userPayload *dtos.UpdateUserByIdPayload) *utils.AppError {
 	us.logger.Info("Update user service called...")
 
 	// call the update user by id repository
-	repositoryErr := us.UserRepository.UpdateUserById(userParams, userPayload)
-	return repositoryErr
+	updateUserRepositoryErr := us.UserRepository.UpdateUserById(userParams, userPayload)
+	return updateUserRepositoryErr
 }
 
 func (us *UserService) DeleteUserById(userParams *dtos.DeleteUserByIdParams) *utils.AppError {
 	us.logger.Info("Delete user service called...")
 
 	// call the delete user by id repository
-	repositoryErr := us.UserRepository.DeleteUserById(userParams)
-	return repositoryErr
+	deleteUserRepositoryErr := us.UserRepository.DeleteUserById(userParams)
+	return deleteUserRepositoryErr
 }
 
 func (us *UserService) SendOtpForVerification(otpPayload *dtos.CreateOtpServicePayload) *utils.AppError {
 	us.logger.Info("Send otp for verification service called...")
 
 	// fetch the user by email repository
-	existingUserModel, repositoryErr := us.UserRepository.GetUserByEmail(&dtos.GetUserByEmailPayload{
+	existingUserModel, getUserRepositoryErr := us.UserRepository.GetUserByEmail(&dtos.GetUserByEmailPayload{
 		Email: otpPayload.UserEmail,
 	})
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if getUserRepositoryErr != nil {
+		return getUserRepositoryErr
 	}
 
 	// check if user is verified
@@ -209,12 +209,12 @@ func (us *UserService) SendOtpForVerification(otpPayload *dtos.CreateOtpServiceP
 	}
 
 	// generate otp and hash
-	otpString, err := utils.GenerateRandomOtp(10)
+	otpString, otpGenerationErr := utils.GenerateRandomOtp(10)
 
-	if err != nil {
+	if otpGenerationErr != nil {
 		us.logger.Error("Something went wrong while generating otp")
 
-		return utils.InternalServerError("Something went wrong while generating otp: " + err.Error())
+		return utils.InternalServerError("Something went wrong while generating otp: " + otpGenerationErr.Error())
 	}
 
 	otpBytes := sha256.Sum256([]byte(otpString))
@@ -227,12 +227,12 @@ func (us *UserService) SendOtpForVerification(otpPayload *dtos.CreateOtpServiceP
 		OtpHash:   otpHash,
 	}
 
-	repositoryErr = us.UserRepository.CreateOtp(otpRepoPayload)
+	createOtpRepositoryErr := us.UserRepository.CreateOtp(otpRepoPayload)
 
-	if repositoryErr != nil {
+	if createOtpRepositoryErr != nil {
 		us.logger.Fatal("Something went wrong while generating the otp")
 
-		return repositoryErr
+		return createOtpRepositoryErr
 	}
 
 	// render the email template
@@ -266,12 +266,12 @@ func (us *UserService) VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppEr
 	us.logger.Info("Verify otp service called...")
 
 	// fetch the user by email repository
-	existingUserModel, repositoryErr := us.UserRepository.GetUserByEmail(&dtos.GetUserByEmailPayload{
+	existingUserModel, getUserRepositoryErr := us.UserRepository.GetUserByEmail(&dtos.GetUserByEmailPayload{
 		Email: otpPayload.UserEmail,
 	})
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if getUserRepositoryErr != nil {
+		return getUserRepositoryErr
 	}
 
 	// check if user is verified
@@ -293,10 +293,10 @@ func (us *UserService) VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppEr
 		OtpHash:   otpHash,
 	}
 
-	_, repositoryErr = us.UserRepository.FetchOtp(otpRepoPayload)
+	_, fetchOtpRepositoryErr := us.UserRepository.FetchOtp(otpRepoPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if fetchOtpRepositoryErr != nil {
+		return fetchOtpRepositoryErr
 	}
 
 	// update user status to verified
@@ -308,10 +308,10 @@ func (us *UserService) VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppEr
 		Verified: true,
 	}
 
-	repositoryErr = us.UserRepository.UpdateUserById(userParams, userPayload)
+	updateUserRepositoryErr := us.UserRepository.UpdateUserById(userParams, userPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if updateUserRepositoryErr != nil {
+		return updateUserRepositoryErr
 	}
 
 	// delete all the otps for the user
@@ -319,10 +319,10 @@ func (us *UserService) VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppEr
 		UserID: existingUserModel.ID,
 	}
 
-	repositoryErr = us.UserRepository.DeleteOtps(deleteOtpsPayload)
+	deleteOtpsRepositoryErr := us.UserRepository.DeleteOtps(deleteOtpsPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if deleteOtpsRepositoryErr != nil {
+		return deleteOtpsRepositoryErr
 	}
 
 	us.logger.Info("User verification was successful")
@@ -332,7 +332,7 @@ func (us *UserService) VerifyOtp(otpPayload *dtos.VerifyOtpPayload) *utils.AppEr
 
 func (us *UserService) RefreshAccessToken(tokenPayload *dtos.RefreshAccessTokenPayload) (string, *utils.AppError) {
 	// verify the refresh token
-	token, err := jwt.Parse(tokenPayload.RefreshToken, func(token *jwt.Token) (any, error) {
+	token, tokenErr := jwt.Parse(tokenPayload.RefreshToken, func(token *jwt.Token) (any, error) {
 		// invalid signing method had been used for token generating
 		if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 			us.logger.Error("Invalid signing method had been used while refreshing access token")
@@ -345,18 +345,17 @@ func (us *UserService) RefreshAccessToken(tokenPayload *dtos.RefreshAccessTokenP
 	})
 
 	// check if there's an error or the token is invalid
-	if err != nil {
+	if tokenErr != nil {
 		us.logger.Fatal("Invalid token has been provided while refreshing access token",
-			zap.String("error", err.Error()))
+			zap.String("error", tokenErr.Error()))
 
-		return "", utils.Unauthorized("Invalid token has been provided while refreshing access token:  " + err.Error())
+		return "", utils.Unauthorized("Invalid token has been provided while refreshing access token:  " + tokenErr.Error())
 	}
 
 	if !token.Valid {
-		us.logger.Fatal("Invalid or expired token has been provided while refreshing access token",
-			zap.String("error", err.Error()))
+		us.logger.Fatal("Invalid or expired token has been provided while refreshing access token")
 
-		return "", utils.Unauthorized("Invalid or expired token has been provided while refreshing access token:  " + err.Error())
+		return "", utils.Unauthorized("Invalid or expired token has been provided while refreshing access token")
 	}
 
 	// parse token to decode the payload
@@ -384,10 +383,10 @@ func (us *UserService) RefreshAccessToken(tokenPayload *dtos.RefreshAccessTokenP
 		ID: int(userId),
 	}
 
-	existingUserModel, repositoryErr := us.UserRepository.GetUserById(getUserPayload)
+	existingUserModel, getUserRepositoryErr := us.UserRepository.GetUserById(getUserPayload)
 
-	if repositoryErr != nil {
-		return "", repositoryErr
+	if getUserRepositoryErr != nil {
+		return "", getUserRepositoryErr
 	}
 
 	// check if user is verified
@@ -408,10 +407,10 @@ func (us *UserService) RefreshAccessToken(tokenPayload *dtos.RefreshAccessTokenP
 		Revoked:          false,
 	}
 
-	_, repositoryErr = us.UserRepository.FetchSession(sessionPayload)
+	_, fetchSessionRepositoryErr := us.UserRepository.FetchSession(sessionPayload)
 
-	if repositoryErr != nil {
-		return "", repositoryErr
+	if fetchSessionRepositoryErr != nil {
+		return "", fetchSessionRepositoryErr
 	}
 
 	// generate the access token
@@ -434,7 +433,7 @@ func (us *UserService) RefreshAccessToken(tokenPayload *dtos.RefreshAccessTokenP
 
 func (us *UserService) LogoutUser(tokenPayload *dtos.LogoutUserPayload) *utils.AppError {
 	// verify the refresh token
-	token, err := jwt.Parse(tokenPayload.RefreshToken, func(token *jwt.Token) (any, error) {
+	token, tokenErr := jwt.Parse(tokenPayload.RefreshToken, func(token *jwt.Token) (any, error) {
 		// invalid signing method had been used for token generating
 		if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 			us.logger.Error("Invalid signing method had been used while logging out")
@@ -447,18 +446,17 @@ func (us *UserService) LogoutUser(tokenPayload *dtos.LogoutUserPayload) *utils.A
 	})
 
 	// check if there's an error or the token is invalid
-	if err != nil {
+	if tokenErr != nil {
 		us.logger.Fatal("Invalid token has been provided while logging out",
-			zap.String("error", err.Error()))
+			zap.String("error", tokenErr.Error()))
 
-		return utils.Unauthorized("Invalid token has been provided while logging out:  " + err.Error())
+		return utils.Unauthorized("Invalid token has been provided while logging out:  " + tokenErr.Error())
 	}
 
 	if !token.Valid {
-		us.logger.Fatal("Invalid or expired token has been provided while logging out",
-			zap.String("error", err.Error()))
+		us.logger.Fatal("Invalid or expired token has been provided while logging out")
 
-		return utils.Unauthorized("Invalid or expired token has been provided while generating the refresh token:  " + err.Error())
+		return utils.Unauthorized("Invalid or expired token has been provided while generating the refresh token")
 	}
 
 	// parse token to decode the payload
@@ -486,10 +484,10 @@ func (us *UserService) LogoutUser(tokenPayload *dtos.LogoutUserPayload) *utils.A
 		ID: int(userId),
 	}
 
-	existingUserModel, repositoryErr := us.UserRepository.GetUserById(getUserPayload)
+	existingUserModel, getUserRepositoryErr := us.UserRepository.GetUserById(getUserPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if getUserRepositoryErr != nil {
+		return getUserRepositoryErr
 	}
 
 	// check if user is verified
@@ -510,10 +508,10 @@ func (us *UserService) LogoutUser(tokenPayload *dtos.LogoutUserPayload) *utils.A
 		Revoked:          false,
 	}
 
-	existingSessionModel, repositoryErr := us.UserRepository.FetchSession(sessionPayload)
+	existingSessionModel, fetchSessionRepositoryErr := us.UserRepository.FetchSession(sessionPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if fetchSessionRepositoryErr != nil {
+		return fetchSessionRepositoryErr
 	}
 
 	// revoke the session
@@ -525,10 +523,10 @@ func (us *UserService) LogoutUser(tokenPayload *dtos.LogoutUserPayload) *utils.A
 		Revoked: true,
 	}
 
-	repositoryErr = us.UserRepository.UpdateSessionById(updateSessionParams, updateSessionPayload)
+	updateSessionRepositoryErr := us.UserRepository.UpdateSessionById(updateSessionParams, updateSessionPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if updateSessionRepositoryErr != nil {
+		return updateSessionRepositoryErr
 	}
 
 	us.logger.Info("Logout user service was successful",
@@ -539,7 +537,7 @@ func (us *UserService) LogoutUser(tokenPayload *dtos.LogoutUserPayload) *utils.A
 
 func (us *UserService) LogoutUserFromAllSessions(tokenPayload *dtos.LogoutUserFromAllSessionsPayload) *utils.AppError {
 	// verify the refresh token
-	token, err := jwt.Parse(tokenPayload.RefreshToken, func(token *jwt.Token) (any, error) {
+	token, tokenErr := jwt.Parse(tokenPayload.RefreshToken, func(token *jwt.Token) (any, error) {
 		// invalid signing method had been used for token generating
 		if token.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 			us.logger.Error("Invalid signing method had been used while logging out from all sessions")
@@ -552,18 +550,17 @@ func (us *UserService) LogoutUserFromAllSessions(tokenPayload *dtos.LogoutUserFr
 	})
 
 	// check if there's an error or the token is invalid
-	if err != nil {
+	if tokenErr != nil {
 		us.logger.Fatal("Invalid token has been provided while logging out from all sessions",
-			zap.String("error", err.Error()))
+			zap.String("error", tokenErr.Error()))
 
-		return utils.Unauthorized("Invalid token has been provided while logging out from all sessions:  " + err.Error())
+		return utils.Unauthorized("Invalid token has been provided while logging out from all sessions:  " + tokenErr.Error())
 	}
 
 	if !token.Valid {
-		us.logger.Fatal("Invalid or expired token has been provided while logging out from all sessions",
-			zap.String("error", err.Error()))
+		us.logger.Fatal("Invalid or expired token has been provided while logging out from all sessions")
 
-		return utils.Unauthorized("Invalid or expired token has been provided while logging out from all sessions:  " + err.Error())
+		return utils.Unauthorized("Invalid or expired token has been provided while logging out from all sessions")
 	}
 
 	// parse token to decode the payload
@@ -591,10 +588,10 @@ func (us *UserService) LogoutUserFromAllSessions(tokenPayload *dtos.LogoutUserFr
 		ID: int(userId),
 	}
 
-	existingUserModel, repositoryErr := us.UserRepository.GetUserById(getUserPayload)
+	existingUserModel, getUserRepositoryErr := us.UserRepository.GetUserById(getUserPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if getUserRepositoryErr != nil {
+		return getUserRepositoryErr
 	}
 
 	// check if user is verified
@@ -610,10 +607,10 @@ func (us *UserService) LogoutUserFromAllSessions(tokenPayload *dtos.LogoutUserFr
 		UserID: existingUserModel.ID,
 	}
 
-	repositoryErr = us.UserRepository.RevokeAllSessions(sessionPayload)
+	revokeSessionsRepositoryErr := us.UserRepository.RevokeAllSessions(sessionPayload)
 
-	if repositoryErr != nil {
-		return repositoryErr
+	if revokeSessionsRepositoryErr != nil {
+		return revokeSessionsRepositoryErr
 	}
 
 	us.logger.Info("Logout from all sessions user service was successful",
